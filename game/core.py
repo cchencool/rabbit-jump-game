@@ -9,7 +9,7 @@ from level.obstacles import ObstacleManager
 from level.difficulty import DifficultyManager
 from player.player import Player
 from player.controller import KeyboardController, HybridController
-from player.costumes import CostumeManager
+from player.costumes import CostumeManager, COSTUMES
 
 
 class GameState:
@@ -181,7 +181,7 @@ class Game:
         start = self.font.render("Press ENTER to Start", True, (0, 0, 0))
 
         # 服装选择提示
-        costume_name = self.costume_manager.COSTUMES[self.costume_manager.current]["name"]
+        costume_name = COSTUMES[self.costume_manager.current]["name"]
         costume_info = self.small_font.render(f"Costume: {costume_name} (LEFT/RIGHT to change)", True, (0, 0, 0))
 
         # 双人模式提示
