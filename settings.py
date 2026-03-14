@@ -1,0 +1,42 @@
+# 游戏配置常量
+
+import pygame
+
+# 屏幕设置
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 450
+FPS = 60
+
+# 颜色定义
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+SKY_BLUE = (135, 206, 235)
+GRASS_GREEN = (124, 181, 78)
+OCEAN_BLUE = (64, 164, 223)
+ICE_BLUE = (176, 224, 230)
+CITY_GRAY = (128, 128, 128)
+
+# 玩家设置
+PLAYER_WIDTH = 32
+PLAYER_HEIGHT = 32
+PLAYER_GRAVITY = 0.8
+PLAYER_JUMP_FORCE = -15
+PLAYER_SPEED = 5
+GROUND_Y = SCREEN_HEIGHT - 80  # 地面 Y 坐标
+
+# 游戏设置
+INITIAL_OBSTACLE_SPEED = 4
+SPEED_INCREMENT = 0.5  # 每关速度增加
+MIN_OBSTACLE_GAP = 60  # 障碍物最小间距
+
+# 背景主题颜色
+BACKGROUNDS = {
+    "grass": GRASS_GREEN,
+    "ocean": OCEAN_BLUE,
+    "ice": ICE_BLUE,
+    "city": CITY_GRAY,
+}
+
+# 输入设置
+JOYCON_DEADZONE = 0.15  # 摇杆死区
+JUMP_THRESHOLD = 1.2  # Joycon 体感跳跃阈值
