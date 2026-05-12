@@ -212,7 +212,7 @@ class Game:
         players = [p for p in [self.player, self.player_two] if p]
         for obstacle in self.obstacle_manager.obstacles:
             for player in players:
-                if player.rect.colliderect(obstacle.rect):
+                if player.hitbox.colliderect(obstacle.hitbox):
                     return True
         return False
 

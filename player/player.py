@@ -126,6 +126,8 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = GROUND_Y - PLAYER_HEIGHT
 
+        self.hitbox = pygame.Rect(x + 12, GROUND_Y - PLAYER_HEIGHT + 8, 40, 48)
+
         self.color = color
         self.velocity_y = 0
         self.is_jumping = False
@@ -159,6 +161,9 @@ class Player(pygame.sprite.Sprite):
             self.is_jumping = False
             self.on_ground = True
             self.jump_count = 0
+
+        self.hitbox.x = self.rect.x + 12
+        self.hitbox.y = self.rect.y + 8
 
         self.animation_timer += 1
         if self.animation_timer >= 5:

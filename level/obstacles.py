@@ -18,6 +18,8 @@ class Obstacle(pygame.sprite.Sprite):
         self.rect.x = x if x is not None else SCREEN_WIDTH
         self.rect.y = GROUND_Y - height
 
+        self.hitbox = pygame.Rect(self.rect.x + 4, self.rect.y + 4, width - 8, height - 4)
+
         self.speed = speed
 
     def _draw_obstacle(self, width, height):
@@ -72,6 +74,8 @@ class Obstacle(pygame.sprite.Sprite):
     def update(self):
         """更新障碍物位置"""
         self.rect.x -= self.speed
+        self.hitbox.x = self.rect.x + 4
+        self.hitbox.y = self.rect.y + 4
 
     def draw(self, screen):
         """绘制障碍物"""
