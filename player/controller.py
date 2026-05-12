@@ -26,11 +26,18 @@ class KeyboardController(InputController):
     def __init__(self, jump_keys=None):
         super().__init__()
         self.jump_keys = jump_keys or [pygame.K_SPACE, pygame.K_UP, pygame.K_w]
+        self.prev_jump_state = False
 
     def update(self):
         """更新键盘状态"""
         keys = pygame.key.get_pressed()
-        self.jump_pressed = any(keys[key] for key in self.jump_keys)
+        current_jump = any(keys[key] for key in self.jump_keys)
+        self.jump_pressed = current_jump and not self.prev_jump_state
+        self.prev_jump_state = current_jump
+
+
+P1_JUMP_KEYS = [pygame.K_SPACE, pygame.K_UP, pygame.K_w]
+P2_JUMP_KEYS = [pygame.K_RETURN, pygame.K_s, pygame.K_DOWN]
 
 
 class JoyconController(InputController):

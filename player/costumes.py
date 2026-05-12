@@ -5,16 +5,16 @@ import pygame
 
 # 服装颜色定义
 COSTUMES = {
-    "default": {"color": (255, 100, 100), "name": "默认"},
-    "blue": {"color": (100, 100, 255), "name": "蓝色"},
-    "green": {"color": (100, 255, 100), "name": "绿色"},
-    "yellow": {"color": (255, 255, 100), "name": "黄色"},
-    "purple": {"color": (180, 100, 255), "name": "紫色"},
-    "orange": {"color": (255, 150, 50), "name": "橙色"},
-    "pink": {"color": (255, 150, 200), "name": "粉色"},
-    "black": {"color": (50, 50, 50), "name": "黑色"},
-    "white": {"color": (240, 240, 240), "name": "白色"},
-    "gold": {"color": (255, 215, 0), "name": "金色"},
+    "default": {"color": (255, 100, 100), "name": "Default"},
+    "blue": {"color": (100, 100, 255), "name": "Blue"},
+    "green": {"color": (100, 255, 100), "name": "Green"},
+    "yellow": {"color": (255, 255, 100), "name": "Yellow"},
+    "purple": {"color": (180, 100, 255), "name": "Purple"},
+    "orange": {"color": (255, 150, 50), "name": "Orange"},
+    "pink": {"color": (255, 150, 200), "name": "Pink"},
+    "black": {"color": (50, 50, 50), "name": "Black"},
+    "white": {"color": (240, 240, 240), "name": "White"},
+    "gold": {"color": (255, 215, 0), "name": "Gold"},
 }
 
 # 风格分类

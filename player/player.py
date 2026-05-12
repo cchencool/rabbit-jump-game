@@ -131,16 +131,22 @@ class Player(pygame.sprite.Sprite):
         self.is_jumping = False
         self.on_ground = True
         self.is_running = True
+        self.jump_count = 0
+        self.max_jumps = 2
 
         self.frame = 0
         self.animation_timer = 0
 
     def jump(self):
-        """跳跃"""
-        if self.on_ground:
-            self.velocity_y = PLAYER_JUMP_FORCE
+        """跳跃（支持二级跳）"""
+        if self.jump_count < self.max_jumps:
+            if self.on_ground:
+                self.velocity_y = PLAYER_JUMP_FORCE
+            else:
+                self.velocity_y = PLAYER_JUMP_FORCE * 0.85
             self.is_jumping = True
             self.on_ground = False
+            self.jump_count += 1
 
     def update(self):
         """更新玩家状态"""
@@ -152,6 +158,7 @@ class Player(pygame.sprite.Sprite):
             self.velocity_y = 0
             self.is_jumping = False
             self.on_ground = True
+            self.jump_count = 0
 
         self.animation_timer += 1
         if self.animation_timer >= 5:

@@ -7,7 +7,7 @@ from level.background import Background
 from level.obstacles import ObstacleManager
 from level.difficulty import DifficultyManager
 from player.player import Player
-from player.controller import KeyboardController, HybridController
+from player.controller import KeyboardController, HybridController, P1_JUMP_KEYS, P2_JUMP_KEYS
 from player.costumes import CostumeManager, COSTUMES
 
 
@@ -76,8 +76,6 @@ class Game:
                         self.costume_manager.cycle_prev()
                     elif event.key == pygame.K_t:
                         self.two_player_mode = not self.two_player_mode
-                    elif event.key == pygame.K_j:
-                        self.use_joycon = not self.use_joycon
 
                 if self.state == GameState.PLAYING and event.key == pygame.K_c:
                     if self.player:
@@ -88,17 +86,13 @@ class Game:
         """开始游戏"""
         color = self.costume_manager.get_color()
         self.player = Player(x=150, color=color)
-
-        if self.use_joycon and pygame.joystick.get_count() > 0:
-            self.controller = HybridController(0)
-            self.controller.connect()
-            print("Using Joycon controller")
-        else:
-            self.controller = KeyboardController()
-            print("Using keyboard controller")
+        self.controller = KeyboardController(jump_keys=P1_JUMP_KEYS)
 
         if self.two_player_mode:
             self.player_two = Player(x=280, color=(100, 100, 255))
+            self.controller_two = KeyboardController(jump_keys=P2_JUMP_KEYS)
+        else:
+            self.controller_two = None
 
         self.obstacle_manager.reset()
         self.difficulty.reset()
@@ -125,7 +119,8 @@ class Game:
                 self.player.update()
 
             if self.player_two:
-                if self.player.is_jumping and self.player_two.on_ground:
+                self.controller_two.update()
+                if self.controller_two.check_jump():
                     self.player_two.jump()
                 self.player_two.update()
 
@@ -174,18 +169,15 @@ class Game:
 
         two_player_info = self.small_font.render(f"2P Mode: {'ON' if self.two_player_mode else 'OFF'} (Press T to toggle)", True, (100, 100, 100))
 
-        joycon_mode_info = self.small_font.render(f"Joycon Mode: {'ON' if self.use_joycon else 'OFF'} (Press J to toggle)", True, (100, 100, 100))
-
-        controls = self.small_font.render("Controls: SPACE/Up/W to jump, C to change costume", True, (120, 120, 120))
-        joycon_status = self.small_font.render(f"Joycon: {'Ready (Press J to toggle)' if pygame.joystick.get_count() > 0 else 'Not detected'}", True, (130, 130, 130))
+        controls = self.small_font.render("P1: SPACE/Up/W to jump, C to change costume", True, (120, 120, 120))
+        p2_controls = self.small_font.render("P2: Enter/S/Down to jump", True, (120, 120, 120))
 
         self.screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 120))
         self.screen.blit(costume_info, (SCREEN_WIDTH // 2 - costume_info.get_width() // 2, 250))
         self.screen.blit(two_player_info, (SCREEN_WIDTH // 2 - two_player_info.get_width() // 2, 310))
-        self.screen.blit(joycon_mode_info, (SCREEN_WIDTH // 2 - joycon_mode_info.get_width() // 2, 360))
-        self.screen.blit(start, (SCREEN_WIDTH // 2 - start.get_width() // 2, 430))
-        self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, 520))
-        self.screen.blit(joycon_status, (SCREEN_WIDTH // 2 - joycon_status.get_width() // 2, 570))
+        self.screen.blit(start, (SCREEN_WIDTH // 2 - start.get_width() // 2, 370))
+        self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, 440))
+        self.screen.blit(p2_controls, (SCREEN_WIDTH // 2 - p2_controls.get_width() // 2, 480))
 
         preview_x = SCREEN_WIDTH // 2 - 32
         preview_y = 620
