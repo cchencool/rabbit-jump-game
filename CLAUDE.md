@@ -25,7 +25,9 @@ Rabbit Jump Game - 一个 2D 像素风格的跑酷游戏，主角是一只可以
 rabbit_jump_game/
 ├── main.py              # 游戏入口
 ├── settings.py          # 配置常量
-├── requirements.txt     # 依赖
+├── pyproject.toml       # uv 项目配置
+├── uv.lock              # 依赖锁定文件
+├── requirements.txt     # 依赖（备用）
 ├── BUILD.md             # 打包发布说明
 ├── game/
 │   ├── __init__.py
@@ -48,15 +50,39 @@ rabbit_jump_game/
 
 ## Commands
 
+### 使用 uv（推荐）
+
+```bash
+# 首次设置 - 创建虚拟环境并安装依赖
+uv sync
+
+# 运行游戏
+uv run python main.py
+
+# 添加新依赖
+uv add <package>
+
+# 更新依赖
+uv lock --upgrade
+
+# 同步依赖（与 lock 文件保持一致）
+uv sync
+
+# 安装开发依赖
+uv sync --group dev
+
+# 查看已安装的包
+uv pip list
+```
+
+### 使用 requirements.txt（备用）
+
 ```bash
 # 安装依赖
 pip install -r requirements.txt
 
 # 运行游戏
 python main.py
-
-# 打包发布
-pyinstaller rabbit_jump_game.spec
 ```
 
 ## Controls
