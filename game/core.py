@@ -2,6 +2,8 @@
 
 import pygame
 import sys
+import json
+import os
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, WHITE, GROUND_Y
 from level.background import Background
 from level.obstacles import ObstacleManager
@@ -10,6 +12,8 @@ from player.player import Player
 from player.controller import KeyboardController, HybridController, P1_JUMP_KEYS, P2_JUMP_KEYS
 from player.costumes import CostumeManager, COSTUMES
 
+SAVE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "save_data.json")
+
 
 class GameState:
     """游戏状态枚举"""
@@ -17,6 +21,7 @@ class GameState:
     PLAYING = "playing"
     PAUSED = "paused"
     GAME_OVER = "game_over"
+    CONFIRM_QUIT = "confirm_quit"
 
 
 class Game:
@@ -36,6 +41,7 @@ class Game:
         self.player = None
         self.player_two = None
         self.controller = None
+        self.controller_two = None
         self.obstacle_manager = ObstacleManager()
         self.difficulty = DifficultyManager()
         self.background = Background("grass")
@@ -60,6 +66,8 @@ class Game:
                         self.state = GameState.PAUSED
                     elif self.state == GameState.PAUSED:
                         self.state = GameState.PLAYING
+                    elif self.state == GameState.CONFIRM_QUIT:
+                        self.state = GameState.PAUSED
                     elif self.state == GameState.GAME_OVER:
                         self.reset_game()
 
@@ -68,6 +76,14 @@ class Game:
                         self.start_game()
                     elif self.state == GameState.GAME_OVER:
                         self.reset_game()
+                    elif self.state == GameState.CONFIRM_QUIT:
+                        self.save_and_quit()
+
+                if event.key == pygame.K_q and self.state == GameState.PAUSED:
+                    self.state = GameState.CONFIRM_QUIT
+
+                if event.key == pygame.K_n and self.state == GameState.CONFIRM_QUIT:
+                    self.state = GameState.PAUSED
 
                 if self.state == GameState.MENU:
                     if event.key == pygame.K_RIGHT:
@@ -76,11 +92,70 @@ class Game:
                         self.costume_manager.cycle_prev()
                     elif event.key == pygame.K_t:
                         self.two_player_mode = not self.two_player_mode
+                    elif event.key == pygame.K_l:
+                        self.load_game()
 
                 if self.state == GameState.PLAYING and event.key == pygame.K_c:
                     if self.player:
                         self.costume_manager.cycle_next()
                         self.player.set_costume(self.costume_manager.get_color())
+
+                if self.state == GameState.PLAYING and event.key == pygame.K_s:
+                    self.save_game()
+
+    def save_game(self):
+        """保存游戏进度"""
+        save_data = {
+            "score": self.difficulty.score,
+            "level": self.difficulty.level,
+            "two_player_mode": self.two_player_mode,
+            "costume": self.costume_manager.current,
+            "obstacle_speed": self.obstacle_manager.speed,
+            "spawn_interval": self.obstacle_manager.spawn_interval,
+        }
+        try:
+            with open(SAVE_FILE, "w") as f:
+                json.dump(save_data, f)
+            print("Game saved!")
+        except Exception as e:
+            print(f"Failed to save: {e}")
+
+    def load_game(self):
+        """加载游戏进度"""
+        if not os.path.exists(SAVE_FILE):
+            print("No save file found")
+            return
+        try:
+            with open(SAVE_FILE, "r") as f:
+                save_data = json.load(f)
+
+            self.two_player_mode = save_data.get("two_player_mode", False)
+            self.costume_manager.set_costume(save_data.get("costume", "pink"))
+
+            color = self.costume_manager.get_color()
+            self.player = Player(x=150, color=color)
+            self.controller = KeyboardController(jump_keys=P1_JUMP_KEYS)
+
+            if self.two_player_mode:
+                self.player_two = Player(x=280, color=(100, 100, 255))
+                self.controller_two = KeyboardController(jump_keys=P2_JUMP_KEYS)
+            else:
+                self.controller_two = None
+
+            self.difficulty.score = save_data.get("score", 0)
+            self.difficulty.level = save_data.get("level", 1)
+            self.obstacle_manager.speed = save_data.get("obstacle_speed", 3)
+            self.obstacle_manager.spawn_interval = save_data.get("spawn_interval", 150)
+            self.background = Background("grass")
+            self.state = GameState.PLAYING
+            print("Game loaded!")
+        except Exception as e:
+            print(f"Failed to load: {e}")
+
+    def save_and_quit(self):
+        """保存并退出到主界面"""
+        self.save_game()
+        self.reset_game()
 
     def start_game(self):
         """开始游戏"""
@@ -104,6 +179,8 @@ class Game:
         self.state = GameState.MENU
         self.player = None
         self.player_two = None
+        self.controller = None
+        self.controller_two = None
         self.obstacle_manager.reset()
         self.difficulty.reset()
 
@@ -153,6 +230,9 @@ class Game:
         elif self.state == GameState.PAUSED:
             self.draw_game()
             self.draw_paused()
+        elif self.state == GameState.CONFIRM_QUIT:
+            self.draw_game()
+            self.draw_confirm_quit()
         elif self.state == GameState.GAME_OVER:
             self.draw_game()
             self.draw_game_over()
@@ -171,6 +251,7 @@ class Game:
 
         controls = self.small_font.render("P1: SPACE/Up/W to jump, C to change costume", True, (120, 120, 120))
         p2_controls = self.small_font.render("P2: Enter/S/Down to jump", True, (120, 120, 120))
+        save_info = self.small_font.render("S to save, L to load (in game)", True, (130, 130, 130))
 
         self.screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 120))
         self.screen.blit(costume_info, (SCREEN_WIDTH // 2 - costume_info.get_width() // 2, 250))
@@ -178,9 +259,10 @@ class Game:
         self.screen.blit(start, (SCREEN_WIDTH // 2 - start.get_width() // 2, 370))
         self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, 440))
         self.screen.blit(p2_controls, (SCREEN_WIDTH // 2 - p2_controls.get_width() // 2, 480))
+        self.screen.blit(save_info, (SCREEN_WIDTH // 2 - save_info.get_width() // 2, 530))
 
         preview_x = SCREEN_WIDTH // 2 - 32
-        preview_y = 620
+        preview_y = 600
         preview_surface = pygame.Surface((64, 64), pygame.SRCALPHA)
         from player.player import draw_rabbit
         draw_rabbit(
@@ -224,8 +306,27 @@ class Game:
 
         paused = self.font.render("PAUSED", True, (255, 255, 255))
         hint = self.small_font.render("Press ESC to resume", True, (200, 200, 200))
-        self.screen.blit(paused, (SCREEN_WIDTH // 2 - paused.get_width() // 2, SCREEN_HEIGHT // 2 - 40))
-        self.screen.blit(hint, (SCREEN_WIDTH // 2 - hint.get_width() // 2, SCREEN_HEIGHT // 2 + 30))
+        quit_hint = self.small_font.render("Press Q to quit to menu", True, (180, 180, 180))
+        self.screen.blit(paused, (SCREEN_WIDTH // 2 - paused.get_width() // 2, SCREEN_HEIGHT // 2 - 60))
+        self.screen.blit(hint, (SCREEN_WIDTH // 2 - hint.get_width() // 2, SCREEN_HEIGHT // 2))
+        self.screen.blit(quit_hint, (SCREEN_WIDTH // 2 - quit_hint.get_width() // 2, SCREEN_HEIGHT // 2 + 40))
+
+    def draw_confirm_quit(self):
+        """绘制确认退出画面"""
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        overlay.fill((0, 0, 0))
+        overlay.set_alpha(160)
+        self.screen.blit(overlay, (0, 0))
+
+        confirm = self.font.render("Return to Menu?", True, (255, 255, 255))
+        save_note = self.small_font.render("Progress will be saved", True, (200, 200, 200))
+        yes = self.small_font.render("Press ENTER to confirm", True, (150, 255, 150))
+        no = self.small_font.render("Press N or ESC to cancel", True, (255, 150, 150))
+
+        self.screen.blit(confirm, (SCREEN_WIDTH // 2 - confirm.get_width() // 2, SCREEN_HEIGHT // 2 - 80))
+        self.screen.blit(save_note, (SCREEN_WIDTH // 2 - save_note.get_width() // 2, SCREEN_HEIGHT // 2 - 30))
+        self.screen.blit(yes, (SCREEN_WIDTH // 2 - yes.get_width() // 2, SCREEN_HEIGHT // 2 + 30))
+        self.screen.blit(no, (SCREEN_WIDTH // 2 - no.get_width() // 2, SCREEN_HEIGHT // 2 + 70))
 
     def draw_game_over(self):
         """绘制游戏结束画面"""

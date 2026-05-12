@@ -30,7 +30,7 @@ class CostumeManager:
 
     def __init__(self):
         self.unlocked = list(COSTUMES.keys())
-        self.current = "default"
+        self.current = "pink"
 
     def set_costume(self, costume_id):
         """设置当前服装"""

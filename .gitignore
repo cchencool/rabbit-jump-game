@@ -42,3 +42,6 @@ Thumbs.db
 # Game assets (keep empty folder but ignore content)
 assets/*
 !assets/.gitkeep
+
+# Save data
+save_data.json
