@@ -108,7 +108,7 @@ class Game:
                         self.costume_manager.cycle_next()
                         self.player.set_costume(self.costume_manager.get_color())
 
-                if self.state == GameState.PLAYING and event.key == pygame.K_s:
+                if self.state == GameState.PLAYING and event.key == pygame.K_f:
                     self.save_game()
 
     def save_game(self):
@@ -218,8 +218,12 @@ class Game:
             self.difficulty.update()
             self.obstacle_manager.update(self.player.rect if self.player else None)
             self.obstacle_manager.update_hearts()
+            self.obstacle_manager.update_apples()
+            self.obstacle_manager.update_coins()
 
             self.check_heart_collection()
+            self.check_apple_collection()
+            self.check_coin_collection()
 
             self.check_player_collisions()
 
@@ -266,6 +270,26 @@ class Game:
                     self.obstacle_manager.hearts.remove(heart)
                     break
 
+    def check_apple_collection(self):
+        """检测玩家与苹果的碰撞"""
+        players = [p for p in [self.player, self.player_two] if p]
+        for apple in self.obstacle_manager.apples[:]:
+            for player in players:
+                if player.hitbox.colliderect(apple.hitbox):
+                    self.difficulty.add_score(1)
+                    self.obstacle_manager.apples.remove(apple)
+                    break
+
+    def check_coin_collection(self):
+        """检测玩家与金币的碰撞"""
+        players = [p for p in [self.player, self.player_two] if p]
+        for coin in self.obstacle_manager.coins[:]:
+            for player in players:
+                if player.hitbox.colliderect(coin.hitbox):
+                    player.shield_timer = player.shield_duration
+                    self.obstacle_manager.coins.remove(coin)
+                    break
+
     def draw(self):
         """绘制游戏画面"""
         if self.state == GameState.PLAYING:
@@ -302,7 +326,7 @@ class Game:
 
         controls = self.small_font.render("P1: SPACE/Up/W to jump, C to change costume", True, (120, 120, 120))
         p2_controls = self.small_font.render("P2: Enter/S/Down to jump", True, (120, 120, 120))
-        save_info = self.small_font.render("S to save, L to load (in game)", True, (130, 130, 130))
+        save_info = self.small_font.render("F to save, L to load (in game)", True, (130, 130, 130))
 
         self.screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 100))
         self.screen.blit(costume_info, (SCREEN_WIDTH // 2 - costume_info.get_width() // 2, 200))
@@ -370,11 +394,19 @@ class Game:
 
         if self.player:
             self._draw_hearts(self.player.hp, self.player.max_hp, 20, 110)
+            if self.player.shield_timer > 0:
+                shield_seconds = self.player.shield_timer // 60
+                shield_text = self.small_font.render(f"Shield: {shield_seconds}s", True, (255, 215, 0))
+                self.screen.blit(shield_text, (self.player.rect.x - 10, self.player.rect.y - 30))
 
         if self.player_two:
             p2_text = self.small_font.render("2P", True, (100, 100, 255))
             self.screen.blit(p2_text, (SCREEN_WIDTH - 60, 20))
             self._draw_hearts(self.player_two.hp, self.player_two.max_hp, SCREEN_WIDTH - 120, 110)
+            if self.player_two.shield_timer > 0:
+                shield_seconds = self.player_two.shield_timer // 60
+                shield_text = self.small_font.render(f"Shield: {shield_seconds}s", True, (255, 215, 0))
+                self.screen.blit(shield_text, (self.player_two.rect.x - 10, self.player_two.rect.y - 30))
 
     def _draw_hearts(self, hp, max_hp, x, y):
         """绘制血量爱心"""

@@ -119,16 +119,86 @@ class Heart:
         pygame.draw.circle(screen, (255, 150, 150), (cx + 6, cy - 5), 3)
 
 
+class Apple:
+    """小苹果 - 拾取加分"""
+
+    def __init__(self, x=None, y=None, speed=3):
+        self.size = 20
+        self.rect = pygame.Rect(x if x is not None else SCREEN_WIDTH, y if y is not None else GROUND_Y - 150, self.size, self.size)
+        self.hitbox = pygame.Rect(self.rect.x + 2, self.rect.y + 2, self.size - 4, self.size - 4)
+        self.speed = speed
+        self.bob_offset = 0
+        self.bob_timer = 0
+
+    def update(self):
+        """更新位置"""
+        self.rect.x -= self.speed
+        self.hitbox.x = self.rect.x + 2
+        self.hitbox.y = self.rect.y + 2
+
+        self.bob_timer += 1
+        self.bob_offset = int(pygame.math.Vector2(0, 1).rotate(self.bob_timer * 8).y * 4)
+
+    def draw(self, screen):
+        """绘制苹果"""
+        cx = self.rect.x + self.size // 2
+        cy = self.rect.y + self.size // 2 + self.bob_offset
+
+        pygame.draw.circle(screen, (220, 50, 50), (cx, cy), 8)
+        pygame.draw.circle(screen, (255, 80, 80), (cx - 2, cy - 2), 3)
+        pygame.draw.line(screen, (50, 120, 50), (cx, cy - 8), (cx + 2, cy - 12), 2)
+
+
+class Coin:
+    """小金币 - 拾取后10秒无敌"""
+
+    def __init__(self, x=None, y=None, speed=3):
+        self.size = 22
+        self.rect = pygame.Rect(x if x is not None else SCREEN_WIDTH, y if y is not None else GROUND_Y - 150, self.size, self.size)
+        self.hitbox = pygame.Rect(self.rect.x + 2, self.rect.y + 2, self.size - 4, self.size - 4)
+        self.speed = speed
+        self.bob_offset = 0
+        self.bob_timer = 0
+        self.spin_angle = 0
+
+    def update(self):
+        """更新位置"""
+        self.rect.x -= self.speed
+        self.hitbox.x = self.rect.x + 2
+        self.hitbox.y = self.rect.y + 2
+
+        self.bob_timer += 1
+        self.bob_offset = int(pygame.math.Vector2(0, 1).rotate(self.bob_timer * 6).y * 5)
+        self.spin_angle += 3
+
+    def draw(self, screen):
+        """绘制金币"""
+        cx = self.rect.x + self.size // 2
+        cy = self.rect.y + self.size // 2 + self.bob_offset
+
+        spin_scale = abs(pygame.math.Vector2(1, 0).rotate(self.spin_angle).x)
+        width = max(4, int(10 * spin_scale))
+
+        pygame.draw.ellipse(screen, (255, 215, 0), (cx - width, cy - 9, width * 2, 18))
+        pygame.draw.ellipse(screen, (255, 240, 100), (cx - width + 2, cy - 7, width * 2 - 4, 14))
+
+
 class ObstacleManager:
     """障碍物管理器"""
 
     def __init__(self):
         self.obstacles = []
         self.hearts = []
+        self.apples = []
+        self.coins = []
         self.spawn_timer = 0
         self.spawn_interval = 120
         self.heart_timer = 0
         self.heart_interval = 600
+        self.apple_timer = 0
+        self.apple_interval = 180
+        self.coin_timer = 0
+        self.coin_interval = 900
         self.speed = 4
         self.obstacle_types = ["rock", "cactus", "box", "barrel"]
 
@@ -162,6 +232,42 @@ class ObstacleManager:
         heart = Heart(y=y, speed=self.speed * 0.8)
         self.hearts.append(heart)
 
+    def update_apples(self):
+        """更新所有苹果"""
+        self.apple_timer += 1
+        if self.apple_timer >= self.apple_interval:
+            self.apple_timer = 0
+            self.spawn_apple()
+
+        for apple in self.apples[:]:
+            apple.update()
+            if apple.rect.right < 0:
+                self.apples.remove(apple)
+
+    def spawn_apple(self):
+        """生成小苹果"""
+        y = random.randint(GROUND_Y - 250, GROUND_Y - 100)
+        apple = Apple(y=y, speed=self.speed * 0.8)
+        self.apples.append(apple)
+
+    def update_coins(self):
+        """更新所有金币"""
+        self.coin_timer += 1
+        if self.coin_timer >= self.coin_interval:
+            self.coin_timer = 0
+            self.spawn_coin()
+
+        for coin in self.coins[:]:
+            coin.update()
+            if coin.rect.right < 0:
+                self.coins.remove(coin)
+
+    def spawn_coin(self):
+        """生成小金币"""
+        y = random.randint(GROUND_Y - 250, GROUND_Y - 120)
+        coin = Coin(y=y, speed=self.speed * 0.8)
+        self.coins.append(coin)
+
     def spawn_obstacle(self):
         """生成新障碍物"""
         height = random.randint(40, 80)
@@ -180,13 +286,21 @@ class ObstacleManager:
         """重置管理器"""
         self.obstacles = []
         self.hearts = []
+        self.apples = []
+        self.coins = []
         self.spawn_timer = 0
         self.heart_timer = 0
+        self.apple_timer = 0
+        self.coin_timer = 0
         self.speed = 4
 
     def draw(self, screen):
-        """绘制所有障碍物和爱心"""
+        """绘制所有障碍物和道具"""
         for obstacle in self.obstacles:
             obstacle.draw(screen)
         for heart in self.hearts:
             heart.draw(screen)
+        for apple in self.apples:
+            apple.draw(screen)
+        for coin in self.coins:
+            coin.draw(screen)

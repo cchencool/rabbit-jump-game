@@ -10,10 +10,15 @@ class DifficultyManager:
         self.speed_multiplier = 1.0
         self.obstacle_frequency = 150
 
-    def update(self, delta_score=1):
-        """更新难度"""
-        self.score += delta_score
+    def update(self):
+        """更新难度（基于时间）"""
+        new_level = (self.score // 15) + 1
+        if new_level > self.level:
+            self.level_up(new_level)
 
+    def add_score(self, points=1):
+        """增加分数"""
+        self.score += points
         new_level = (self.score // 15) + 1
         if new_level > self.level:
             self.level_up(new_level)

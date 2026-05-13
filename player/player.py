@@ -156,10 +156,15 @@ class Player(pygame.sprite.Sprite):
         self.invincible_timer = 0
         self.invincible_duration = 60
 
+        self.shield_timer = 0
+        self.shield_duration = 600
+
         self.practice_mode = False
 
     def take_damage(self):
         """受到伤害"""
+        if self.shield_timer > 0:
+            return
         if self.invincible_timer > 0:
             return
         self.hp -= 1
@@ -174,6 +179,8 @@ class Player(pygame.sprite.Sprite):
         """更新无敌状态"""
         if self.invincible_timer > 0:
             self.invincible_timer -= 1
+        if self.shield_timer > 0:
+            self.shield_timer -= 1
 
     def jump(self):
         """跳跃（支持二级跳）"""
@@ -225,6 +232,12 @@ class Player(pygame.sprite.Sprite):
             self.practice_mode,
         )
         screen.blit(self.image, self.rect)
+
+        if self.shield_timer > 0:
+            shield_alpha = int(100 + 50 * pygame.math.Vector2(1, 0).rotate(pygame.time.get_ticks() % 360).x)
+            shield_surface = pygame.Surface((PLAYER_WIDTH + 20, PLAYER_HEIGHT + 20), pygame.SRCALPHA)
+            pygame.draw.ellipse(shield_surface, (255, 215, 0, shield_alpha), (0, 0, PLAYER_WIDTH + 20, PLAYER_HEIGHT + 20), 3)
+            screen.blit(shield_surface, (self.rect.x - 10, self.rect.y - 10))
 
     def set_costume(self, color):
         """更换服装颜色"""
