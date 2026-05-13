@@ -11,6 +11,7 @@ from level.difficulty import DifficultyManager
 from player.player import Player
 from player.controller import KeyboardController, HybridController, P1_JUMP_KEYS, P2_JUMP_KEYS
 from player.costumes import CostumeManager, COSTUMES
+from sound import SoundManager
 
 SAVE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "save_data.json")
 
@@ -48,6 +49,8 @@ class Game:
         self.costume_manager = CostumeManager()
         self.costume_manager_p2 = CostumeManager()
         self.costume_manager_p2.current = "blue"
+
+        self.sound_manager = SoundManager()
 
         self.two_player_mode = False
         self.practice_mode = False
@@ -207,12 +210,14 @@ class Game:
                 self.controller.update()
                 if self.controller.check_jump():
                     self.player.jump()
+                    self.sound_manager.play("jump")
                 self.player.update()
 
             if self.player_two:
                 self.controller_two.update()
                 if self.controller_two.check_jump():
                     self.player_two.jump()
+                    self.sound_manager.play("jump")
                 self.player_two.update()
 
             self.difficulty.update()
@@ -245,6 +250,7 @@ class Game:
                         self.player.invincible_timer = self.player.invincible_duration
                     else:
                         self.player.take_damage()
+                        self.sound_manager.play("damage")
                         if self.player.hp <= 0:
                             self.state = GameState.GAME_OVER
                     break
@@ -256,6 +262,7 @@ class Game:
                         self.player_two.invincible_timer = self.player_two.invincible_duration
                     else:
                         self.player_two.take_damage()
+                        self.sound_manager.play("damage")
                         if self.player_two.hp <= 0:
                             self.state = GameState.GAME_OVER
                     break
@@ -268,6 +275,7 @@ class Game:
                 if player.hitbox.colliderect(heart.hitbox):
                     player.heal()
                     self.obstacle_manager.hearts.remove(heart)
+                    self.sound_manager.play("heart")
                     break
 
     def check_apple_collection(self):
@@ -278,6 +286,7 @@ class Game:
                 if player.hitbox.colliderect(apple.hitbox):
                     self.difficulty.add_score(1)
                     self.obstacle_manager.apples.remove(apple)
+                    self.sound_manager.play("apple")
                     break
 
     def check_coin_collection(self):
@@ -288,6 +297,7 @@ class Game:
                 if player.hitbox.colliderect(coin.hitbox):
                     player.shield_timer = player.shield_duration
                     self.obstacle_manager.coins.remove(coin)
+                    self.sound_manager.play("coin")
                     break
 
     def draw(self):
