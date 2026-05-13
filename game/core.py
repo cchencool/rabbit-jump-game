@@ -48,7 +48,7 @@ class Game:
         self.costume_manager = CostumeManager()
 
         self.two_player_mode = False
-        self.use_joycon = False
+        self.practice_mode = False
 
         self.font = pygame.font.Font(None, 48)
         self.small_font = pygame.font.Font(None, 32)
@@ -92,6 +92,8 @@ class Game:
                         self.costume_manager.cycle_prev()
                     elif event.key == pygame.K_t:
                         self.two_player_mode = not self.two_player_mode
+                    elif event.key == pygame.K_p:
+                        self.practice_mode = not self.practice_mode
                     elif event.key == pygame.K_l:
                         self.load_game()
 
@@ -223,6 +225,9 @@ class Game:
 
     def check_player_collisions(self):
         """检测每个玩家与障碍物的碰撞"""
+        if self.practice_mode:
+            return
+
         if self.player:
             for obstacle in self.obstacle_manager.obstacles:
                 if self.player.hitbox.colliderect(obstacle.hitbox):
@@ -281,21 +286,23 @@ class Game:
         costume_info = self.small_font.render(f"Costume: {costume_name} (LEFT/RIGHT to change)", True, (100, 100, 100))
 
         two_player_info = self.small_font.render(f"2P Mode: {'ON' if self.two_player_mode else 'OFF'} (Press T to toggle)", True, (100, 100, 100))
+        practice_info = self.small_font.render(f"Practice: {'ON' if self.practice_mode else 'OFF'} (Press P to toggle)", True, (100, 100, 100))
 
         controls = self.small_font.render("P1: SPACE/Up/W to jump, C to change costume", True, (120, 120, 120))
         p2_controls = self.small_font.render("P2: Enter/S/Down to jump", True, (120, 120, 120))
         save_info = self.small_font.render("S to save, L to load (in game)", True, (130, 130, 130))
 
         self.screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 120))
-        self.screen.blit(costume_info, (SCREEN_WIDTH // 2 - costume_info.get_width() // 2, 250))
-        self.screen.blit(two_player_info, (SCREEN_WIDTH // 2 - two_player_info.get_width() // 2, 310))
-        self.screen.blit(start, (SCREEN_WIDTH // 2 - start.get_width() // 2, 370))
-        self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, 440))
-        self.screen.blit(p2_controls, (SCREEN_WIDTH // 2 - p2_controls.get_width() // 2, 480))
-        self.screen.blit(save_info, (SCREEN_WIDTH // 2 - save_info.get_width() // 2, 530))
+        self.screen.blit(costume_info, (SCREEN_WIDTH // 2 - costume_info.get_width() // 2, 220))
+        self.screen.blit(two_player_info, (SCREEN_WIDTH // 2 - two_player_info.get_width() // 2, 270))
+        self.screen.blit(practice_info, (SCREEN_WIDTH // 2 - practice_info.get_width() // 2, 310))
+        self.screen.blit(start, (SCREEN_WIDTH // 2 - start.get_width() // 2, 360))
+        self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, 430))
+        self.screen.blit(p2_controls, (SCREEN_WIDTH // 2 - p2_controls.get_width() // 2, 470))
+        self.screen.blit(save_info, (SCREEN_WIDTH // 2 - save_info.get_width() // 2, 520))
 
         preview_x = SCREEN_WIDTH // 2 - 32
-        preview_y = 600
+        preview_y = 580
         preview_surface = pygame.Surface((64, 64), pygame.SRCALPHA)
         from player.player import draw_rabbit
         draw_rabbit(
