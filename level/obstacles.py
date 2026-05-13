@@ -85,6 +85,25 @@ class Obstacle(pygame.sprite.Sprite):
 class Heart:
     """爱心血包"""
 
+    _cached_surface = None
+
+    @classmethod
+    def _get_surface(cls):
+        if cls._cached_surface is None:
+            size = 24
+            cls._cached_surface = pygame.Surface((size, size), pygame.SRCALPHA)
+            cx, cy = size // 2, size // 2
+            pygame.draw.circle(cls._cached_surface, (255, 80, 80), (cx - 6, cy - 4), 7)
+            pygame.draw.circle(cls._cached_surface, (255, 80, 80), (cx + 6, cy - 4), 7)
+            pygame.draw.polygon(cls._cached_surface, (255, 80, 80), [
+                (cx - 12, cy - 2),
+                (cx, cy + 12),
+                (cx + 12, cy - 2),
+            ])
+            pygame.draw.circle(cls._cached_surface, (255, 150, 150), (cx - 6, cy - 5), 3)
+            pygame.draw.circle(cls._cached_surface, (255, 150, 150), (cx + 6, cy - 5), 3)
+        return cls._cached_surface
+
     def __init__(self, x=None, y=None, speed=3):
         self.size = 24
         self.rect = pygame.Rect(x if x is not None else SCREEN_WIDTH, y if y is not None else GROUND_Y - 150, self.size, self.size)
@@ -104,23 +123,25 @@ class Heart:
 
     def draw(self, screen):
         """绘制爱心"""
-        cx = self.rect.x + self.size // 2
-        cy = self.rect.y + self.size // 2 + self.bob_offset
-
-        pygame.draw.circle(screen, (255, 80, 80), (cx - 6, cy - 4), 7)
-        pygame.draw.circle(screen, (255, 80, 80), (cx + 6, cy - 4), 7)
-        pygame.draw.polygon(screen, (255, 80, 80), [
-            (cx - 12, cy - 2),
-            (cx, cy + 12),
-            (cx + 12, cy - 2),
-        ])
-
-        pygame.draw.circle(screen, (255, 150, 150), (cx - 6, cy - 5), 3)
-        pygame.draw.circle(screen, (255, 150, 150), (cx + 6, cy - 5), 3)
+        surface = self._get_surface()
+        screen.blit(surface, (self.rect.x, self.rect.y + self.bob_offset))
 
 
 class Apple:
     """小苹果 - 拾取加分"""
+
+    _cached_surface = None
+
+    @classmethod
+    def _get_surface(cls):
+        if cls._cached_surface is None:
+            size = 20
+            cls._cached_surface = pygame.Surface((size, size), pygame.SRCALPHA)
+            cx, cy = size // 2, size // 2
+            pygame.draw.circle(cls._cached_surface, (220, 50, 50), (cx, cy), 8)
+            pygame.draw.circle(cls._cached_surface, (255, 80, 80), (cx - 2, cy - 2), 3)
+            pygame.draw.line(cls._cached_surface, (50, 120, 50), (cx, cy - 8), (cx + 2, cy - 12), 2)
+        return cls._cached_surface
 
     def __init__(self, x=None, y=None, speed=3):
         self.size = 20
@@ -141,16 +162,25 @@ class Apple:
 
     def draw(self, screen):
         """绘制苹果"""
-        cx = self.rect.x + self.size // 2
-        cy = self.rect.y + self.size // 2 + self.bob_offset
-
-        pygame.draw.circle(screen, (220, 50, 50), (cx, cy), 8)
-        pygame.draw.circle(screen, (255, 80, 80), (cx - 2, cy - 2), 3)
-        pygame.draw.line(screen, (50, 120, 50), (cx, cy - 8), (cx + 2, cy - 12), 2)
+        surface = self._get_surface()
+        screen.blit(surface, (self.rect.x, self.rect.y + self.bob_offset))
 
 
 class Coin:
     """小金币 - 拾取后10秒无敌"""
+
+    _cached_frames = {}
+
+    @classmethod
+    def _get_frame(cls, width):
+        if width not in cls._cached_frames:
+            size = 22
+            surface = pygame.Surface((size, size), pygame.SRCALPHA)
+            cx, cy = size // 2, size // 2
+            pygame.draw.ellipse(surface, (255, 215, 0), (cx - width, cy - 9, width * 2, 18))
+            pygame.draw.ellipse(surface, (255, 240, 100), (cx - width + 2, cy - 7, width * 2 - 4, 14))
+            cls._cached_frames[width] = surface
+        return cls._cached_frames[width]
 
     def __init__(self, x=None, y=None, speed=3):
         self.size = 22
@@ -173,14 +203,10 @@ class Coin:
 
     def draw(self, screen):
         """绘制金币"""
-        cx = self.rect.x + self.size // 2
-        cy = self.rect.y + self.size // 2 + self.bob_offset
-
         spin_scale = abs(pygame.math.Vector2(1, 0).rotate(self.spin_angle).x)
         width = max(4, int(10 * spin_scale))
-
-        pygame.draw.ellipse(screen, (255, 215, 0), (cx - width, cy - 9, width * 2, 18))
-        pygame.draw.ellipse(screen, (255, 240, 100), (cx - width + 2, cy - 7, width * 2 - 4, 14))
+        surface = self._get_frame(width)
+        screen.blit(surface, (self.rect.x, self.rect.y + self.bob_offset))
 
 
 class ObstacleManager:

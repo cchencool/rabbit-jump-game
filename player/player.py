@@ -131,6 +131,8 @@ def draw_rabbit(surface, x, y, width, height, color, frame, is_jumping, is_runni
 class Player(pygame.sprite.Sprite):
     """玩家角色类 - 兔子"""
 
+    _sprite_cache = {}
+
     def __init__(self, x=100, color=(255, 100, 100)):
         super().__init__()
         self.image = pygame.Surface((PLAYER_WIDTH, PLAYER_HEIGHT), pygame.SRCALPHA)
@@ -160,6 +162,10 @@ class Player(pygame.sprite.Sprite):
         self.shield_duration = 600
 
         self.practice_mode = False
+
+        self._cached_surfaces = {}
+        self._last_color = None
+        self._last_practice = None
 
     def take_damage(self):
         """受到伤害"""
@@ -219,19 +225,24 @@ class Player(pygame.sprite.Sprite):
         """绘制玩家"""
         if self.invincible_timer > 0 and (self.invincible_timer // 4) % 2 == 0:
             return
-        self.image.fill((0, 0, 0, 0))
-        draw_rabbit(
-            self.image,
-            0, 0,
-            PLAYER_WIDTH,
-            PLAYER_HEIGHT,
-            self.color,
-            self.frame,
-            self.is_jumping,
-            self.is_running,
-            self.practice_mode,
-        )
-        screen.blit(self.image, self.rect)
+
+        cache_key = (self.color, self.frame, self.is_jumping, self.is_running, self.practice_mode)
+        if cache_key not in self._cached_surfaces:
+            surface = pygame.Surface((PLAYER_WIDTH, PLAYER_HEIGHT), pygame.SRCALPHA)
+            draw_rabbit(
+                surface,
+                0, 0,
+                PLAYER_WIDTH,
+                PLAYER_HEIGHT,
+                self.color,
+                self.frame,
+                self.is_jumping,
+                self.is_running,
+                self.practice_mode,
+            )
+            self._cached_surfaces[cache_key] = surface
+
+        screen.blit(self._cached_surfaces[cache_key], self.rect)
 
         if self.shield_timer > 0:
             shield_alpha = int(100 + 50 * pygame.math.Vector2(1, 0).rotate(pygame.time.get_ticks() % 360).x)
