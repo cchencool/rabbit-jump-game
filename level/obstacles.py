@@ -22,6 +22,12 @@ class Obstacle(pygame.sprite.Sprite):
 
         self.speed = speed
 
+        self.destroyed = False
+        self.fly_x = 0
+        self.fly_y = 0
+        self.rotation = 0
+        self.marked_for_removal = False
+
     def _draw_obstacle(self, width, height):
         """绘制障碍物"""
         self.image.fill((0, 0, 0, 0))
@@ -73,13 +79,33 @@ class Obstacle(pygame.sprite.Sprite):
 
     def update(self):
         """更新障碍物位置"""
-        self.rect.x -= self.speed
-        self.hitbox.x = self.rect.x + 4
-        self.hitbox.y = self.rect.y + 4
+        if self.destroyed:
+            self.rect.x += self.fly_x
+            self.rect.y += self.fly_y
+            self.fly_y += 0.5
+            self.rotation += 10
+            if self.rect.y > SCREEN_HEIGHT + 100:
+                self.marked_for_removal = True
+        else:
+            self.rect.x -= self.speed
+            self.hitbox.x = self.rect.x + 4
+            self.hitbox.y = self.rect.y + 4
+
+    def destroy(self):
+        """障碍物被破坏，向上飞走"""
+        self.destroyed = True
+        self.fly_x = -2
+        self.fly_y = -8
+        self.marked_for_removal = False
 
     def draw(self, screen):
         """绘制障碍物"""
-        screen.blit(self.image, self.rect)
+        if self.destroyed:
+            rotated = pygame.transform.rotate(self.image, self.rotation)
+            new_rect = rotated.get_rect(center=self.rect.center)
+            screen.blit(rotated, new_rect)
+        else:
+            screen.blit(self.image, self.rect)
 
 
 class Heart:
@@ -232,7 +258,7 @@ class ObstacleManager:
         """更新所有障碍物"""
         for obstacle in self.obstacles[:]:
             obstacle.update()
-            if obstacle.rect.right < 0:
+            if obstacle.rect.right < 0 or obstacle.marked_for_removal:
                 self.obstacles.remove(obstacle)
 
         self.spawn_timer += 1

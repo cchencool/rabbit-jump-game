@@ -31,7 +31,7 @@ MIN_OBSTACLE_GAP = 80  # 障碍物最小间距
 
 # 背景主题颜色
 BACKGROUNDS = {
-    "grass": GRASS_GREEN,
+    "grass": SKY_BLUE,
     "ocean": OCEAN_BLUE,
     "ice": ICE_BLUE,
     "city": CITY_GRAY,

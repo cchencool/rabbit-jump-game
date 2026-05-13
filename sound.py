@@ -33,7 +33,9 @@ class SoundManager:
             sample_rate, 0.3, [1200, 1500, 1800, 2000]
         )
 
-        self.sounds["damage"] = self._create_thud(sample_rate, 0.15)
+        self.sounds["damage"] = self._create_thud(sample_rate, 0.1)
+
+        self.sounds["shield_hit"] = self._create_shield_hit(sample_rate, 0.2)
 
         self.sounds["game_over"] = self._create_tone(
             sample_rate, 0.5, 400, 100, "sine"
@@ -96,21 +98,43 @@ class SoundManager:
         return sound
 
     def _create_thud(self, sample_rate, duration):
-        """创建'咚'的撞击音效"""
+        """创建沉闷干脆的撞击音效"""
         num_samples = int(sample_rate * duration)
         samples = []
 
         for i in range(num_samples):
             t = i / sample_rate
-            freq = 80 + 40 * math.exp(-t * 30)
+            freq = 60 + 20 * math.exp(-t * 50)
             phase = 2 * math.pi * freq * t
 
             value = math.sin(phase)
-            noise = (math.sin(phase * 3.7) * 0.3 + math.sin(phase * 7.1) * 0.15)
+            noise = math.sin(phase * 5.3) * 0.2
             value = value + noise
 
-            envelope = math.exp(-t * 25)
-            value = int(value * envelope * 32767 * 0.8)
+            envelope = math.exp(-t * 40)
+            value = int(value * envelope * 32767 * 0.6)
+            samples.append(value)
+
+        sound_bytes = struct.pack(f"{len(samples)}h", *samples)
+        sound = pygame.mixer.Sound(buffer=sound_bytes)
+        return sound
+
+    def _create_shield_hit(self, sample_rate, duration):
+        """创建护盾撞击/障碍物破坏音效"""
+        num_samples = int(sample_rate * duration)
+        samples = []
+
+        for i in range(num_samples):
+            t = i / sample_rate
+            freq = 200 + 300 * math.exp(-t * 15)
+            phase = 2 * math.pi * freq * t
+
+            value = math.sin(phase)
+            crackle = (math.sin(phase * 2.3) * 0.4 + math.sin(phase * 4.7) * 0.2 + math.sin(phase * 9.1) * 0.1)
+            value = value + crackle
+
+            envelope = math.exp(-t * 12)
+            value = int(max(-32767, min(32767, value * envelope * 32767 * 0.5)))
             samples.append(value)
 
         sound_bytes = struct.pack(f"{len(samples)}h", *samples)

@@ -12,6 +12,7 @@ from player.player import Player
 from player.controller import KeyboardController, HybridController, P1_JUMP_KEYS, P2_JUMP_KEYS
 from player.costumes import CostumeManager, COSTUMES
 from sound import SoundManager
+from level.weather import WeatherSystem
 
 SAVE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "save_data.json")
 
@@ -51,6 +52,7 @@ class Game:
         self.costume_manager_p2.current = "blue"
 
         self.sound_manager = SoundManager()
+        self.weather_system = WeatherSystem()
 
         self.two_player_mode = False
         self.practice_mode = False
@@ -206,11 +208,13 @@ class Game:
         self.controller_two = None
         self.obstacle_manager.reset()
         self.difficulty.reset()
+        self.weather_system = WeatherSystem()
 
     def update(self):
         """更新游戏逻辑"""
         if self.state == GameState.PLAYING:
             self.background.update(speed=2)
+            self.weather_system.update()
 
             if self.player:
                 self.controller.update()
@@ -250,9 +254,12 @@ class Game:
     def check_player_collisions(self):
         """检测每个玩家与障碍物的碰撞"""
         if self.player:
-            for obstacle in self.obstacle_manager.obstacles:
+            for obstacle in self.obstacle_manager.obstacles[:]:
                 if self.player.hitbox.colliderect(obstacle.hitbox):
-                    if self.practice_mode:
+                    if self.player.shield_timer > 0:
+                        obstacle.destroy()
+                        self.sound_manager.play("shield_hit")
+                    elif self.practice_mode:
                         self.player.invincible_timer = self.player.invincible_duration
                     else:
                         self.player.take_damage()
@@ -262,9 +269,12 @@ class Game:
                     break
 
         if self.player_two:
-            for obstacle in self.obstacle_manager.obstacles:
+            for obstacle in self.obstacle_manager.obstacles[:]:
                 if self.player_two.hitbox.colliderect(obstacle.hitbox):
-                    if self.practice_mode:
+                    if self.player_two.shield_timer > 0:
+                        obstacle.destroy()
+                        self.sound_manager.play("shield_hit")
+                    elif self.practice_mode:
                         self.player_two.invincible_timer = self.player_two.invincible_duration
                     else:
                         self.player_two.take_damage()
@@ -449,6 +459,8 @@ class Game:
             self.player.draw(self.screen)
         if self.player_two:
             self.player_two.draw(self.screen)
+
+        self.weather_system.draw(self.screen)
 
         self.draw_ui()
 
