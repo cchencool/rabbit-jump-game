@@ -11,7 +11,7 @@ from settings import (
 )
 
 
-def draw_rabbit(surface, x, y, width, height, color, frame, is_jumping, is_running):
+def draw_rabbit(surface, x, y, width, height, color, frame, is_jumping, is_running, practice_mode=False):
     """绘制栩栩如生的像素风兔子"""
     pixel_size = 4
     body_color = color
@@ -115,6 +115,18 @@ def draw_rabbit(surface, x, y, width, height, color, frame, is_jumping, is_runni
 
     pygame.draw.circle(surface, (240, 240, 240), (tail_circle[0], tail_circle[1]), tail_circle[2])
 
+    if practice_mode:
+        hand_y = cy + 10 + bounce_offset
+        for side in [-1, 1]:
+            hx = cx + side * 16
+            pygame.draw.circle(surface, (255, 80, 80), (hx - 3, hand_y - 2), 4)
+            pygame.draw.circle(surface, (255, 80, 80), (hx + 3, hand_y - 2), 4)
+            pygame.draw.polygon(surface, (255, 80, 80), [
+                (hx - 6, hand_y),
+                (hx, hand_y + 7),
+                (hx + 6, hand_y),
+            ])
+
 
 class Player(pygame.sprite.Sprite):
     """玩家角色类 - 兔子"""
@@ -143,6 +155,8 @@ class Player(pygame.sprite.Sprite):
         self.max_hp = 3
         self.invincible_timer = 0
         self.invincible_duration = 60
+
+        self.practice_mode = False
 
     def take_damage(self):
         """受到伤害"""
@@ -208,6 +222,7 @@ class Player(pygame.sprite.Sprite):
             self.frame,
             self.is_jumping,
             self.is_running,
+            self.practice_mode,
         )
         screen.blit(self.image, self.rect)
 

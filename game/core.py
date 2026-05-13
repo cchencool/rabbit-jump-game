@@ -166,10 +166,12 @@ class Game:
         """开始游戏"""
         color = self.costume_manager.get_color()
         self.player = Player(x=150, color=color)
+        self.player.practice_mode = self.practice_mode
         self.controller = KeyboardController(jump_keys=P1_JUMP_KEYS)
 
         if self.two_player_mode:
             self.player_two = Player(x=280, color=(100, 100, 255))
+            self.player_two.practice_mode = self.practice_mode
             self.controller_two = KeyboardController(jump_keys=P2_JUMP_KEYS)
         else:
             self.controller_two = None
@@ -311,6 +313,7 @@ class Game:
             64, 64,
             self.costume_manager.get_color(),
             0, False, False,
+            self.practice_mode,
         )
         self.screen.blit(preview_surface, (preview_x, preview_y))
 
