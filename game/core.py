@@ -318,7 +318,7 @@ class Game:
 
     def draw(self):
         """绘制游戏画面"""
-        if self.state == GameState.PLAYING:
+        if self.state in (GameState.PLAYING, GameState.PAUSED, GameState.CONFIRM_QUIT, GameState.GAME_OVER):
             self.background.draw(self.screen)
         else:
             self.screen.fill(WHITE)
