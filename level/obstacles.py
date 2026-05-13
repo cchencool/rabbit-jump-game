@@ -2,7 +2,7 @@
 
 import pygame
 import random
-from settings import SCREEN_WIDTH, GROUND_Y
+from settings import SCREEN_WIDTH, SCREEN_HEIGHT, GROUND_Y
 
 
 class Obstacle(pygame.sprite.Sprite):
