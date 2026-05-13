@@ -120,21 +120,22 @@ class SoundManager:
         return sound
 
     def _create_shield_hit(self, sample_rate, duration):
-        """创建护盾撞击/障碍物破坏音效"""
+        """创建护盾撞击/障碍物破坏音效 - 干脆有力的撞击破坏声"""
         num_samples = int(sample_rate * duration)
         samples = []
 
         for i in range(num_samples):
             t = i / sample_rate
-            freq = 200 + 300 * math.exp(-t * 15)
+            freq = 150 + 500 * math.exp(-t * 40)
             phase = 2 * math.pi * freq * t
 
             value = math.sin(phase)
-            crackle = (math.sin(phase * 2.3) * 0.4 + math.sin(phase * 4.7) * 0.2 + math.sin(phase * 9.1) * 0.1)
-            value = value + crackle
+            impact = math.sin(phase * 3.1) * 0.5
+            crackle = math.sin(phase * 7.3) * 0.2 * math.exp(-t * 60)
+            value = value + impact + crackle
 
-            envelope = math.exp(-t * 12)
-            value = int(max(-32767, min(32767, value * envelope * 32767 * 0.5)))
+            envelope = math.exp(-t * 30)
+            value = int(max(-32767, min(32767, value * envelope * 32767 * 0.6)))
             samples.append(value)
 
         sound_bytes = struct.pack(f"{len(samples)}h", *samples)
