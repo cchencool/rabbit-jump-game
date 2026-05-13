@@ -1,4 +1,3 @@
-# 难度管理
 """关卡难度曲线"""
 
 
@@ -9,14 +8,13 @@ class DifficultyManager:
         self.level = 1
         self.score = 0
         self.speed_multiplier = 1.0
-        self.obstacle_frequency = 150  # 帧数
+        self.obstacle_frequency = 150
 
-    def update(self, score):
+    def update(self, delta_score=1):
         """更新难度"""
-        self.score = score
+        self.score += delta_score
 
-        # 每 15 分升一级
-        new_level = (score // 15) + 1
+        new_level = (self.score // 15) + 1
         if new_level > self.level:
             self.level_up(new_level)
 
@@ -24,7 +22,6 @@ class DifficultyManager:
         """升级"""
         self.level = new_level
         self.speed_multiplier = 1.0 + (self.level - 1) * 0.08
-        # 减少生成间隔，增加难度
         self.obstacle_frequency = max(80, 150 - (self.level - 1) * 8)
 
     def get_speed(self, base_speed):

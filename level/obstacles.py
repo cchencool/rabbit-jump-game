@@ -82,13 +82,53 @@ class Obstacle(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
 
+class Heart:
+    """爱心血包"""
+
+    def __init__(self, x=None, y=None, speed=3):
+        self.size = 24
+        self.rect = pygame.Rect(x if x is not None else SCREEN_WIDTH, y if y is not None else GROUND_Y - 150, self.size, self.size)
+        self.hitbox = pygame.Rect(self.rect.x + 4, self.rect.y + 4, self.size - 8, self.size - 8)
+        self.speed = speed
+        self.bob_offset = 0
+        self.bob_timer = 0
+
+    def update(self):
+        """更新位置"""
+        self.rect.x -= self.speed
+        self.hitbox.x = self.rect.x + 4
+        self.hitbox.y = self.rect.y + 4
+
+        self.bob_timer += 1
+        self.bob_offset = int(pygame.math.Vector2(0, 1).rotate(self.bob_timer * 6).y * 5)
+
+    def draw(self, screen):
+        """绘制爱心"""
+        cx = self.rect.x + self.size // 2
+        cy = self.rect.y + self.size // 2 + self.bob_offset
+
+        pygame.draw.circle(screen, (255, 80, 80), (cx - 6, cy - 4), 7)
+        pygame.draw.circle(screen, (255, 80, 80), (cx + 6, cy - 4), 7)
+        pygame.draw.polygon(screen, (255, 80, 80), [
+            (cx - 12, cy - 2),
+            (cx, cy + 12),
+            (cx + 12, cy - 2),
+        ])
+
+        pygame.draw.circle(screen, (255, 150, 150), (cx - 6, cy - 5), 3)
+        pygame.draw.circle(screen, (255, 150, 150), (cx + 6, cy - 5), 3)
+
+
 class ObstacleManager:
     """障碍物管理器"""
 
     def __init__(self):
         self.obstacles = []
+        self.hearts = []
         self.spawn_timer = 0
         self.spawn_interval = 120
+        self.heart_timer = 0
+        self.heart_interval = 600
         self.speed = 4
         self.obstacle_types = ["rock", "cactus", "box", "barrel"]
 
@@ -103,6 +143,24 @@ class ObstacleManager:
         if self.spawn_timer >= self.spawn_interval:
             self.spawn_timer = 0
             self.spawn_obstacle()
+
+    def update_hearts(self):
+        """更新所有爱心"""
+        self.heart_timer += 1
+        if self.heart_timer >= self.heart_interval:
+            self.heart_timer = 0
+            self.spawn_heart()
+
+        for heart in self.hearts[:]:
+            heart.update()
+            if heart.rect.right < 0:
+                self.hearts.remove(heart)
+
+    def spawn_heart(self):
+        """生成爱心血包"""
+        y = random.randint(GROUND_Y - 250, GROUND_Y - 120)
+        heart = Heart(y=y, speed=self.speed * 0.8)
+        self.hearts.append(heart)
 
     def spawn_obstacle(self):
         """生成新障碍物"""
@@ -121,10 +179,14 @@ class ObstacleManager:
     def reset(self):
         """重置管理器"""
         self.obstacles = []
+        self.hearts = []
         self.spawn_timer = 0
+        self.heart_timer = 0
         self.speed = 4
 
     def draw(self, screen):
-        """绘制所有障碍物"""
+        """绘制所有障碍物和爱心"""
         for obstacle in self.obstacles:
             obstacle.draw(screen)
+        for heart in self.hearts:
+            heart.draw(screen)

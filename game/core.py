@@ -112,6 +112,7 @@ class Game:
             "costume": self.costume_manager.current,
             "obstacle_speed": self.obstacle_manager.speed,
             "spawn_interval": self.obstacle_manager.spawn_interval,
+            "player_hp": self.player.hp if self.player else 3,
         }
         try:
             with open(SAVE_FILE, "w") as f:
@@ -146,6 +147,8 @@ class Game:
             self.difficulty.level = save_data.get("level", 1)
             self.obstacle_manager.speed = save_data.get("obstacle_speed", 3)
             self.obstacle_manager.spawn_interval = save_data.get("spawn_interval", 150)
+            if self.player:
+                self.player.hp = save_data.get("player_hp", 3)
             self.background = Background("grass")
             self.state = GameState.PLAYING
             print("Game loaded!")
@@ -201,11 +204,13 @@ class Game:
                     self.player_two.jump()
                 self.player_two.update()
 
-            self.difficulty.update(self.obstacle_manager.spawn_timer // 10)
+            self.difficulty.update()
             self.obstacle_manager.update(self.player.rect if self.player else None)
+            self.obstacle_manager.update_hearts()
 
-            if self.check_collision():
-                self.state = GameState.GAME_OVER
+            self.check_heart_collection()
+
+            self.check_player_collisions()
 
     def check_collision(self):
         """检测玩家与障碍物的碰撞"""
@@ -215,6 +220,34 @@ class Game:
                 if player.hitbox.colliderect(obstacle.hitbox):
                     return True
         return False
+
+    def check_player_collisions(self):
+        """检测每个玩家与障碍物的碰撞"""
+        if self.player:
+            for obstacle in self.obstacle_manager.obstacles:
+                if self.player.hitbox.colliderect(obstacle.hitbox):
+                    self.player.take_damage()
+                    if self.player.hp <= 0:
+                        self.state = GameState.GAME_OVER
+                    break
+
+        if self.player_two:
+            for obstacle in self.obstacle_manager.obstacles:
+                if self.player_two.hitbox.colliderect(obstacle.hitbox):
+                    self.player_two.take_damage()
+                    if self.player_two.hp <= 0:
+                        self.state = GameState.GAME_OVER
+                    break
+
+    def check_heart_collection(self):
+        """检测玩家与爱心的碰撞"""
+        players = [p for p in [self.player, self.player_two] if p]
+        for heart in self.obstacle_manager.hearts[:]:
+            for player in players:
+                if player.hitbox.colliderect(heart.hitbox):
+                    player.heal()
+                    self.obstacle_manager.hearts.remove(heart)
+                    break
 
     def draw(self):
         """绘制游戏画面"""
@@ -293,9 +326,35 @@ class Game:
         level_text = self.small_font.render(f"Level: {self.difficulty.level}", True, (0, 0, 0))
         self.screen.blit(level_text, (20, 70))
 
+        if self.player:
+            self._draw_hearts(self.player.hp, self.player.max_hp, 20, 110)
+
         if self.player_two:
             p2_text = self.small_font.render("2P", True, (100, 100, 255))
             self.screen.blit(p2_text, (SCREEN_WIDTH - 60, 20))
+            self._draw_hearts(self.player_two.hp, self.player_two.max_hp, SCREEN_WIDTH - 120, 110)
+
+    def _draw_hearts(self, hp, max_hp, x, y):
+        """绘制血量爱心"""
+        for i in range(max_hp):
+            cx = x + i * 28
+            cy = y
+            if i < hp:
+                pygame.draw.circle(self.screen, (255, 80, 80), (cx - 5, cy - 3), 6)
+                pygame.draw.circle(self.screen, (255, 80, 80), (cx + 5, cy - 3), 6)
+                pygame.draw.polygon(self.screen, (255, 80, 80), [
+                    (cx - 10, cy - 1),
+                    (cx, cy + 10),
+                    (cx + 10, cy - 1),
+                ])
+            else:
+                pygame.draw.circle(self.screen, (150, 150, 150), (cx - 5, cy - 3), 6)
+                pygame.draw.circle(self.screen, (150, 150, 150), (cx + 5, cy - 3), 6)
+                pygame.draw.polygon(self.screen, (150, 150, 150), [
+                    (cx - 10, cy - 1),
+                    (cx, cy + 10),
+                    (cx + 10, cy - 1),
+                ])
 
     def draw_paused(self):
         """绘制暂停画面"""

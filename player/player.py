@@ -139,6 +139,28 @@ class Player(pygame.sprite.Sprite):
         self.frame = 0
         self.animation_timer = 0
 
+        self.hp = 3
+        self.max_hp = 3
+        self.invincible_timer = 0
+        self.invincible_duration = 60
+
+    def take_damage(self):
+        """受到伤害"""
+        if self.invincible_timer > 0:
+            return
+        self.hp -= 1
+        self.invincible_timer = self.invincible_duration
+
+    def heal(self):
+        """恢复血量"""
+        if self.hp < self.max_hp:
+            self.hp += 1
+
+    def update_invincibility(self):
+        """更新无敌状态"""
+        if self.invincible_timer > 0:
+            self.invincible_timer -= 1
+
     def jump(self):
         """跳跃（支持二级跳）"""
         if self.jump_count < self.max_jumps:
@@ -165,6 +187,8 @@ class Player(pygame.sprite.Sprite):
         self.hitbox.x = self.rect.x + 12
         self.hitbox.y = self.rect.y + 8
 
+        self.update_invincibility()
+
         self.animation_timer += 1
         if self.animation_timer >= 5:
             self.animation_timer = 0
@@ -172,6 +196,8 @@ class Player(pygame.sprite.Sprite):
 
     def draw(self, screen):
         """绘制玩家"""
+        if self.invincible_timer > 0 and (self.invincible_timer // 4) % 2 == 0:
+            return
         self.image.fill((0, 0, 0, 0))
         draw_rabbit(
             self.image,
