@@ -54,6 +54,10 @@ class Game:
 
         self.two_player_mode = False
         self.practice_mode = False
+        self.debug_mode = False
+
+        self.fps_history = []
+        self.max_fps_history = 120
 
         self.font = pygame.font.Font(None, 48)
         self.small_font = pygame.font.Font(None, 32)
@@ -103,6 +107,8 @@ class Game:
                         self.two_player_mode = not self.two_player_mode
                     elif event.key == pygame.K_p:
                         self.practice_mode = not self.practice_mode
+                    elif event.key == pygame.K_d:
+                        self.debug_mode = not self.debug_mode
                     elif event.key == pygame.K_l:
                         self.load_game()
 
@@ -321,7 +327,59 @@ class Game:
             self.draw_game()
             self.draw_game_over()
 
+        if self.debug_mode:
+            self.draw_debug()
+
         pygame.display.flip()
+
+    def update_fps(self, fps):
+        """更新帧率记录"""
+        self.fps_history.append(fps)
+        if len(self.fps_history) > self.max_fps_history:
+            self.fps_history.pop(0)
+
+    def draw_debug(self):
+        """绘制调试信息"""
+        current_fps = self.clock.get_fps()
+        self.update_fps(current_fps)
+
+        debug_font = pygame.font.Font(None, 24)
+        small_font = pygame.font.Font(None, 20)
+
+        fps_text = debug_font.render(f"FPS: {current_fps:.1f}", True, (0, 255, 0))
+        self.screen.blit(fps_text, (10, SCREEN_HEIGHT - 120))
+
+        if len(self.fps_history) > 1:
+            graph_width = 200
+            graph_height = 80
+            graph_x = 10
+            graph_y = SCREEN_HEIGHT - 100
+
+            pygame.draw.rect(self.screen, (40, 40, 40), (graph_x, graph_y, graph_width, graph_height))
+            pygame.draw.rect(self.screen, (100, 100, 100), (graph_x, graph_y, graph_width, graph_height), 1)
+
+            max_fps = max(max(self.fps_history), 60)
+            min_fps = min(min(self.fps_history), 30)
+            fps_range = max_fps - min_fps if max_fps != min_fps else 1
+
+            points = []
+            for i, fps in enumerate(self.fps_history):
+                x = graph_x + int(i / self.max_fps_history * graph_width)
+                y = graph_y + graph_height - int((fps - min_fps) / fps_range * graph_height)
+                points.append((x, y))
+
+            if len(points) > 1:
+                pygame.draw.lines(self.screen, (0, 255, 0), False, points, 2)
+
+            avg_fps = sum(self.fps_history) / len(self.fps_history)
+            avg_text = small_font.render(f"Avg: {avg_fps:.1f}", True, (200, 200, 200))
+            self.screen.blit(avg_text, (graph_x + 5, graph_y + 5))
+
+            min_text = small_font.render(f"Min: {min_fps:.1f}", True, (255, 100, 100))
+            self.screen.blit(min_text, (graph_x + 5, graph_y + 25))
+
+            max_text = small_font.render(f"Max: {max_fps:.1f}", True, (100, 255, 100))
+            self.screen.blit(max_text, (graph_x + 5, graph_y + 45))
 
     def draw_menu(self):
         """绘制菜单"""
