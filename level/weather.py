@@ -24,7 +24,7 @@ class WeatherSystem:
         self.current_weather = WeatherType.SUNNY
         self.previous_weather = None
         self.timer = 0
-        self.duration = random.randint(1800, 3600)
+        self.duration = random.randint(1200, 2400)
         self.particles = []
         self.fog_particles = []
         self.cloud_particles = []
@@ -131,7 +131,7 @@ class WeatherSystem:
             WeatherType.SNOWY,
             WeatherType.PETAL,
         ])
-        self.duration = random.randint(1800, 3600)
+        self.duration = random.randint(1200, 2400)
         self._init_particles()
         self.is_transitioning = True
         self.transition_timer = 0

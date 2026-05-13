@@ -219,15 +219,15 @@ class Game:
             if self.player:
                 self.controller.update()
                 if self.controller.check_jump():
-                    self.player.jump()
-                    self.sound_manager.play("jump")
+                    if self.player.jump():
+                        self.sound_manager.play("jump")
                 self.player.update()
 
             if self.player_two:
                 self.controller_two.update()
                 if self.controller_two.check_jump():
-                    self.player_two.jump()
-                    self.sound_manager.play("jump")
+                    if self.player_two.jump():
+                        self.sound_manager.play("jump")
                 self.player_two.update()
 
             self.difficulty.update()
@@ -255,6 +255,8 @@ class Game:
         """检测每个玩家与障碍物的碰撞"""
         if self.player:
             for obstacle in self.obstacle_manager.obstacles[:]:
+                if obstacle.destroyed:
+                    continue
                 if self.player.hitbox.colliderect(obstacle.hitbox):
                     if self.player.shield_timer > 0:
                         obstacle.destroy()
@@ -270,6 +272,8 @@ class Game:
 
         if self.player_two:
             for obstacle in self.obstacle_manager.obstacles[:]:
+                if obstacle.destroyed:
+                    continue
                 if self.player_two.hitbox.colliderect(obstacle.hitbox):
                     if self.player_two.shield_timer > 0:
                         obstacle.destroy()

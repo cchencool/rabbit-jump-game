@@ -198,6 +198,8 @@ class Player(pygame.sprite.Sprite):
             self.is_jumping = True
             self.on_ground = False
             self.jump_count += 1
+            return True
+        return False
 
     def update(self):
         """更新玩家状态"""
