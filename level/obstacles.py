@@ -251,12 +251,15 @@ class ObstacleManager:
         self.apple_interval = 180
         self.coin_timer = 0
         self.coin_interval = 900
-        self.speed = 4
+        self.base_speed = 4
+        self.speed_multiplier = 1.0
         self.obstacle_types = ["rock", "cactus", "box", "barrel"]
 
     def update(self, player_rect):
         """更新所有障碍物"""
+        current_speed = self.base_speed * self.speed_multiplier
         for obstacle in self.obstacles[:]:
+            obstacle.speed = current_speed
             obstacle.update()
             if obstacle.rect.right < 0 or obstacle.marked_for_removal:
                 self.obstacles.remove(obstacle)
@@ -273,7 +276,9 @@ class ObstacleManager:
             self.heart_timer = 0
             self.spawn_heart()
 
+        current_speed = self.base_speed * self.speed_multiplier * 0.8
         for heart in self.hearts[:]:
+            heart.speed = current_speed
             heart.update()
             if heart.rect.right < 0:
                 self.hearts.remove(heart)
@@ -281,7 +286,7 @@ class ObstacleManager:
     def spawn_heart(self):
         """生成爱心血包"""
         y = random.randint(GROUND_Y - 250, GROUND_Y - 120)
-        heart = Heart(y=y, speed=self.speed * 0.8)
+        heart = Heart(y=y, speed=self.base_speed * 0.8)
         self.hearts.append(heart)
 
     def update_apples(self):
@@ -291,7 +296,9 @@ class ObstacleManager:
             self.apple_timer = 0
             self.spawn_apple()
 
+        current_speed = self.base_speed * self.speed_multiplier * 0.8
         for apple in self.apples[:]:
+            apple.speed = current_speed
             apple.update()
             if apple.rect.right < 0:
                 self.apples.remove(apple)
@@ -299,7 +306,7 @@ class ObstacleManager:
     def spawn_apple(self):
         """生成小苹果"""
         y = random.randint(GROUND_Y - 250, GROUND_Y - 100)
-        apple = Apple(y=y, speed=self.speed * 0.8)
+        apple = Apple(y=y, speed=self.base_speed * 0.8)
         self.apples.append(apple)
 
     def update_coins(self):
@@ -309,7 +316,9 @@ class ObstacleManager:
             self.coin_timer = 0
             self.spawn_coin()
 
+        current_speed = self.base_speed * self.speed_multiplier * 0.8
         for coin in self.coins[:]:
+            coin.speed = current_speed
             coin.update()
             if coin.rect.right < 0:
                 self.coins.remove(coin)
@@ -317,7 +326,7 @@ class ObstacleManager:
     def spawn_coin(self):
         """生成小金币"""
         y = random.randint(GROUND_Y - 250, GROUND_Y - 120)
-        coin = Coin(y=y, speed=self.speed * 0.8)
+        coin = Coin(y=y, speed=self.base_speed * 0.8)
         self.coins.append(coin)
 
     def spawn_obstacle(self):
@@ -325,29 +334,16 @@ class ObstacleManager:
         height = random.randint(40, 80)
         width = random.randint(30, 50)
         obstacle_type = random.choice(self.obstacle_types)
-        obstacle = Obstacle(width=width, height=height, speed=self.speed, obstacle_type=obstacle_type)
+        obstacle = Obstacle(width=width, height=height, speed=self.base_speed, obstacle_type=obstacle_type)
         self.obstacles.append(obstacle)
 
     def increase_speed(self, increment=0.5):
-        """增加障碍物速度"""
-        self.speed += increment
-        for obstacle in self.obstacles:
-            obstacle.speed = self.speed
+        """增加障碍物速度（用于难度递增）"""
+        self.base_speed += increment
 
     def set_speed_multiplier(self, multiplier):
-        """设置速度倍率"""
-        base_speed = 4
-        new_speed = base_speed * multiplier
-        speed_diff = new_speed - self.speed
-        self.speed = new_speed
-        for obstacle in self.obstacles:
-            obstacle.speed += speed_diff
-        for heart in self.hearts:
-            heart.speed = self.speed * 0.8
-        for apple in self.apples:
-            apple.speed = self.speed * 0.8
-        for coin in self.coins:
-            coin.speed = self.speed * 0.8
+        """设置速度倍率（快放效果）"""
+        self.speed_multiplier = multiplier
 
     def reset(self):
         """重置管理器"""
@@ -359,7 +355,7 @@ class ObstacleManager:
         self.heart_timer = 0
         self.apple_timer = 0
         self.coin_timer = 0
-        self.speed = 4
+        self.speed_multiplier = 1.0
 
     def draw(self, screen):
         """绘制所有障碍物和道具"""
