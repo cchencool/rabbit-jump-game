@@ -46,6 +46,8 @@ class Game:
         self.difficulty = DifficultyManager()
         self.background = Background("grass")
         self.costume_manager = CostumeManager()
+        self.costume_manager_p2 = CostumeManager()
+        self.costume_manager_p2.current = "blue"
 
         self.two_player_mode = False
         self.practice_mode = False
@@ -90,6 +92,10 @@ class Game:
                         self.costume_manager.cycle_next()
                     elif event.key == pygame.K_LEFT:
                         self.costume_manager.cycle_prev()
+                    elif event.key == pygame.K_PERIOD:
+                        self.costume_manager_p2.cycle_next()
+                    elif event.key == pygame.K_COMMA:
+                        self.costume_manager_p2.cycle_prev()
                     elif event.key == pygame.K_t:
                         self.two_player_mode = not self.two_player_mode
                     elif event.key == pygame.K_p:
@@ -170,7 +176,8 @@ class Game:
         self.controller = KeyboardController(jump_keys=P1_JUMP_KEYS)
 
         if self.two_player_mode:
-            self.player_two = Player(x=280, color=(100, 100, 255))
+            p2_color = self.costume_manager_p2.get_color()
+            self.player_two = Player(x=280, color=p2_color)
             self.player_two.practice_mode = self.practice_mode
             self.controller_two = KeyboardController(jump_keys=P2_JUMP_KEYS)
         else:
@@ -288,7 +295,7 @@ class Game:
         start = self.font.render("Press ENTER to Start", True, (80, 80, 80))
 
         costume_name = COSTUMES[self.costume_manager.current]["name"]
-        costume_info = self.small_font.render(f"Costume: {costume_name} (LEFT/RIGHT to change)", True, (100, 100, 100))
+        costume_info = self.small_font.render(f"P1 Costume: {costume_name} (LEFT/RIGHT)", True, (100, 100, 100))
 
         two_player_info = self.small_font.render(f"2P Mode: {'ON' if self.two_player_mode else 'OFF'} (Press T to toggle)", True, (100, 100, 100))
         practice_info = self.small_font.render(f"Practice: {'ON' if self.practice_mode else 'OFF'} (Press P to toggle)", True, (100, 100, 100))
@@ -297,17 +304,26 @@ class Game:
         p2_controls = self.small_font.render("P2: Enter/S/Down to jump", True, (120, 120, 120))
         save_info = self.small_font.render("S to save, L to load (in game)", True, (130, 130, 130))
 
-        self.screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 120))
-        self.screen.blit(costume_info, (SCREEN_WIDTH // 2 - costume_info.get_width() // 2, 220))
-        self.screen.blit(two_player_info, (SCREEN_WIDTH // 2 - two_player_info.get_width() // 2, 270))
-        self.screen.blit(practice_info, (SCREEN_WIDTH // 2 - practice_info.get_width() // 2, 310))
-        self.screen.blit(start, (SCREEN_WIDTH // 2 - start.get_width() // 2, 360))
-        self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, 430))
-        self.screen.blit(p2_controls, (SCREEN_WIDTH // 2 - p2_controls.get_width() // 2, 470))
-        self.screen.blit(save_info, (SCREEN_WIDTH // 2 - save_info.get_width() // 2, 520))
+        self.screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 100))
+        self.screen.blit(costume_info, (SCREEN_WIDTH // 2 - costume_info.get_width() // 2, 200))
+
+        if self.two_player_mode:
+            p2_costume_name = COSTUMES[self.costume_manager_p2.current]["name"]
+            p2_costume_info = self.small_font.render(f"P2 Costume: {p2_costume_name} (COMMA/PERIOD)", True, (100, 100, 100))
+            self.screen.blit(p2_costume_info, (SCREEN_WIDTH // 2 - p2_costume_info.get_width() // 2, 240))
+            base_y = 280
+        else:
+            base_y = 240
+
+        self.screen.blit(two_player_info, (SCREEN_WIDTH // 2 - two_player_info.get_width() // 2, base_y))
+        self.screen.blit(practice_info, (SCREEN_WIDTH // 2 - practice_info.get_width() // 2, base_y + 40))
+        self.screen.blit(start, (SCREEN_WIDTH // 2 - start.get_width() // 2, base_y + 80))
+        self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, base_y + 140))
+        self.screen.blit(p2_controls, (SCREEN_WIDTH // 2 - p2_controls.get_width() // 2, base_y + 180))
+        self.screen.blit(save_info, (SCREEN_WIDTH // 2 - save_info.get_width() // 2, base_y + 230))
 
         preview_x = SCREEN_WIDTH // 2 - 32
-        preview_y = 580
+        preview_y = base_y + 280
         preview_surface = pygame.Surface((64, 64), pygame.SRCALPHA)
         from player.player import draw_rabbit
         draw_rabbit(
@@ -319,6 +335,19 @@ class Game:
             self.practice_mode,
         )
         self.screen.blit(preview_surface, (preview_x, preview_y))
+
+        if self.two_player_mode:
+            p2_preview_x = SCREEN_WIDTH // 2 + 40
+            p2_preview_surface = pygame.Surface((64, 64), pygame.SRCALPHA)
+            draw_rabbit(
+                p2_preview_surface,
+                0, 0,
+                64, 64,
+                self.costume_manager_p2.get_color(),
+                0, False, False,
+                self.practice_mode,
+            )
+            self.screen.blit(p2_preview_surface, (p2_preview_x, preview_y))
 
     def draw_game(self):
         """绘制游戏画面"""
