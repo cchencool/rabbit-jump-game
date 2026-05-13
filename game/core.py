@@ -227,23 +227,26 @@ class Game:
 
     def check_player_collisions(self):
         """检测每个玩家与障碍物的碰撞"""
-        if self.practice_mode:
-            return
-
         if self.player:
             for obstacle in self.obstacle_manager.obstacles:
                 if self.player.hitbox.colliderect(obstacle.hitbox):
-                    self.player.take_damage()
-                    if self.player.hp <= 0:
-                        self.state = GameState.GAME_OVER
+                    if self.practice_mode:
+                        self.player.invincible_timer = self.player.invincible_duration
+                    else:
+                        self.player.take_damage()
+                        if self.player.hp <= 0:
+                            self.state = GameState.GAME_OVER
                     break
 
         if self.player_two:
             for obstacle in self.obstacle_manager.obstacles:
                 if self.player_two.hitbox.colliderect(obstacle.hitbox):
-                    self.player_two.take_damage()
-                    if self.player_two.hp <= 0:
-                        self.state = GameState.GAME_OVER
+                    if self.practice_mode:
+                        self.player_two.invincible_timer = self.player_two.invincible_duration
+                    else:
+                        self.player_two.take_damage()
+                        if self.player_two.hp <= 0:
+                            self.state = GameState.GAME_OVER
                     break
 
     def check_heart_collection(self):
