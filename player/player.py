@@ -170,11 +170,12 @@ class Player(pygame.sprite.Sprite):
     def take_damage(self):
         """受到伤害"""
         if self.shield_timer > 0:
-            return
+            return False
         if self.invincible_timer > 0:
-            return
+            return False
         self.hp -= 1
         self.invincible_timer = self.invincible_duration
+        return True
 
     def heal(self):
         """恢复血量"""

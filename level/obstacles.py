@@ -94,8 +94,8 @@ class Obstacle(pygame.sprite.Sprite):
     def destroy(self):
         """障碍物被破坏，向上飞走"""
         self.destroyed = True
-        self.fly_x = -2
-        self.fly_y = -8
+        self.fly_x = -5
+        self.fly_y = -15
         self.marked_for_removal = False
 
     def draw(self, screen):
@@ -333,6 +333,21 @@ class ObstacleManager:
         self.speed += increment
         for obstacle in self.obstacles:
             obstacle.speed = self.speed
+
+    def set_speed_multiplier(self, multiplier):
+        """设置速度倍率"""
+        base_speed = 4
+        new_speed = base_speed * multiplier
+        speed_diff = new_speed - self.speed
+        self.speed = new_speed
+        for obstacle in self.obstacles:
+            obstacle.speed += speed_diff
+        for heart in self.hearts:
+            heart.speed = self.speed * 0.8
+        for apple in self.apples:
+            apple.speed = self.speed * 0.8
+        for coin in self.coins:
+            coin.speed = self.speed * 0.8
 
     def reset(self):
         """重置管理器"""

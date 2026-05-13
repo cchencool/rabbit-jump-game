@@ -57,6 +57,8 @@ class Game:
         self.two_player_mode = False
         self.practice_mode = False
         self.debug_mode = False
+        self.speed_level = 1
+        self.speed_multipliers = [0.5, 0.75, 1.0, 1.5, 2.0]
 
         self.fps_history = []
         self.max_fps_history = 120
@@ -121,6 +123,11 @@ class Game:
 
                 if self.state == GameState.PLAYING and event.key == pygame.K_f:
                     self.save_game()
+
+                if self.state == GameState.PLAYING and event.key == pygame.K_EQUALS:
+                    self.speed_level = min(5, self.speed_level + 1)
+                elif self.state == GameState.PLAYING and event.key == pygame.K_MINUS:
+                    self.speed_level = max(1, self.speed_level - 1)
 
     def save_game(self):
         """保存游戏进度"""
@@ -213,7 +220,9 @@ class Game:
     def update(self):
         """更新游戏逻辑"""
         if self.state == GameState.PLAYING:
-            self.background.update(speed=2)
+            speed_mult = self.speed_multipliers[self.speed_level - 1]
+            self.background.update(speed=2 * speed_mult)
+            self.obstacle_manager.set_speed_multiplier(speed_mult)
             self.weather_system.update()
 
             if self.player:
@@ -264,8 +273,8 @@ class Game:
                     elif self.practice_mode:
                         self.player.invincible_timer = self.player.invincible_duration
                     else:
-                        self.player.take_damage()
-                        self.sound_manager.play("damage")
+                        if self.player.take_damage():
+                            self.sound_manager.play("damage")
                         if self.player.hp <= 0:
                             self.state = GameState.GAME_OVER
                     break
@@ -281,8 +290,8 @@ class Game:
                     elif self.practice_mode:
                         self.player_two.invincible_timer = self.player_two.invincible_duration
                     else:
-                        self.player_two.take_damage()
-                        self.sound_manager.play("damage")
+                        if self.player_two.take_damage():
+                            self.sound_manager.play("damage")
                         if self.player_two.hp <= 0:
                             self.state = GameState.GAME_OVER
                     break
@@ -474,10 +483,13 @@ class Game:
         self.screen.blit(score_text, (20, 20))
 
         level_text = self.small_font.render(f"Level: {self.difficulty.level}", True, (0, 0, 0))
-        self.screen.blit(level_text, (20, 70))
+        self.screen.blit(level_text, (20, 60))
+
+        speed_text = self.small_font.render(f"Speed: {self.speed_level}/5 (+/- to adjust)", True, (0, 0, 0))
+        self.screen.blit(speed_text, (20, 90))
 
         if self.player:
-            self._draw_hearts(self.player.hp, self.player.max_hp, 20, 110)
+            self._draw_hearts(self.player.hp, self.player.max_hp, 20, 130)
             if self.player.shield_timer > 0:
                 shield_seconds = self.player.shield_timer // 60
                 shield_text = self.small_font.render(f"Shield: {shield_seconds}s", True, (255, 215, 0))
