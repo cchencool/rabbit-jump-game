@@ -58,7 +58,7 @@ class Game:
         self.practice_mode = False
         self.debug_mode = False
         self.speed_level = 1
-        self.speed_multipliers = [0.5, 0.75, 1.0, 1.5, 2.0]
+        self.speed_multipliers = [1.0, 1.25, 1.5, 1.75, 2.0]
 
         self.fps_history = []
         self.max_fps_history = 120
@@ -228,16 +228,16 @@ class Game:
             if self.player:
                 self.controller.update()
                 if self.controller.check_jump():
-                    if self.player.jump():
+                    if self.player.jump(speed_mult):
                         self.sound_manager.play("jump")
-                self.player.update()
+                self.player.update(speed_mult)
 
             if self.player_two:
                 self.controller_two.update()
                 if self.controller_two.check_jump():
-                    if self.player_two.jump():
+                    if self.player_two.jump(speed_mult):
                         self.sound_manager.play("jump")
-                self.player_two.update()
+                self.player_two.update(speed_mult)
 
             self.difficulty.update()
             self.obstacle_manager.update(self.player.rect if self.player else None)
