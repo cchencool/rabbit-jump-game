@@ -58,7 +58,8 @@ class Game:
         self.practice_mode = False
         self.debug_mode = False
         self.speed_level = 1
-        self.speed_multipliers = [1.0, 1.25, 1.5, 1.75, 2.0]
+        self.speed_multipliers = [1.0, 1.5, 2.0, 2.5, 3.0]
+        self.time_accumulator = 0.0
 
         self.fps_history = []
         self.max_fps_history = 120
@@ -216,40 +217,48 @@ class Game:
         self.obstacle_manager.reset()
         self.difficulty.reset()
         self.weather_system = WeatherSystem()
+        self.time_accumulator = 0.0
 
     def update(self):
         """更新游戏逻辑"""
         if self.state == GameState.PLAYING:
             speed_mult = self.speed_multipliers[self.speed_level - 1]
+            self.time_accumulator += speed_mult
+
+            while self.time_accumulator >= 1.0:
+                self.time_accumulator -= 1.0
+                self._update_game_step()
+
             self.background.update(speed=2 * speed_mult)
             self.obstacle_manager.set_speed_multiplier(speed_mult)
             self.weather_system.update()
 
-            if self.player:
-                self.controller.update()
-                if self.controller.check_jump():
-                    if self.player.jump(speed_mult):
-                        self.sound_manager.play("jump")
-                self.player.update(speed_mult)
+    def _update_game_step(self):
+        """执行一次游戏逻辑更新"""
+        if self.player:
+            self.controller.update()
+            if self.controller.check_jump():
+                if self.player.jump():
+                    self.sound_manager.play("jump")
+            self.player.update()
 
-            if self.player_two:
-                self.controller_two.update()
-                if self.controller_two.check_jump():
-                    if self.player_two.jump(speed_mult):
-                        self.sound_manager.play("jump")
-                self.player_two.update(speed_mult)
+        if self.player_two:
+            self.controller_two.update()
+            if self.controller_two.check_jump():
+                if self.player_two.jump():
+                    self.sound_manager.play("jump")
+            self.player_two.update()
 
-            self.difficulty.update()
-            self.obstacle_manager.update(self.player.rect if self.player else None)
-            self.obstacle_manager.update_hearts()
-            self.obstacle_manager.update_apples()
-            self.obstacle_manager.update_coins()
+        self.difficulty.update()
+        self.obstacle_manager.update(self.player.rect if self.player else None)
+        self.obstacle_manager.update_hearts()
+        self.obstacle_manager.update_apples()
+        self.obstacle_manager.update_coins()
 
-            self.check_heart_collection()
-            self.check_apple_collection()
-            self.check_coin_collection()
-
-            self.check_player_collisions()
+        self.check_heart_collection()
+        self.check_apple_collection()
+        self.check_coin_collection()
+        self.check_player_collisions()
 
     def check_collision(self):
         """检测玩家与障碍物的碰撞"""
