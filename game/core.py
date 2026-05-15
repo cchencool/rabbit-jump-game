@@ -61,6 +61,15 @@ class Game:
         self.speed_multipliers = [1.0, 1.5, 2.0, 2.5, 3.0]
         self.time_accumulator = 0.0
 
+        self.background_themes = ["grass", "ocean", "ice", "city"]
+        self.theme_names = {
+            "grass": "Grassland",
+            "ocean": "Ocean",
+            "ice": "Ice",
+            "city": "City"
+        }
+        self.current_theme_index = 0
+
         self.fps_history = []
         self.max_fps_history = 120
 
@@ -116,6 +125,9 @@ class Game:
                         self.debug_mode = not self.debug_mode
                     elif event.key == pygame.K_l:
                         self.load_game()
+                    elif event.key == pygame.K_b:
+                        self.current_theme_index = (self.current_theme_index + 1) % len(self.background_themes)
+                        self.background.set_theme(self.background_themes[self.current_theme_index])
 
                 if self.state == GameState.PLAYING and event.key == pygame.K_c:
                     if self.player:
@@ -423,6 +435,8 @@ class Game:
 
         two_player_info = self.small_font.render(f"2P Mode: {'ON' if self.two_player_mode else 'OFF'} (Press T to toggle)", True, (100, 100, 100))
         practice_info = self.small_font.render(f"Practice: {'ON' if self.practice_mode else 'OFF'} (Press P to toggle)", True, (100, 100, 100))
+        theme_name = self.theme_names[self.background_themes[self.current_theme_index]]
+        theme_info = self.small_font.render(f"Theme: {theme_name} (Press B to change)", True, (100, 100, 100))
 
         controls = self.small_font.render("P1: SPACE/Up/W to jump, C to change costume", True, (120, 120, 120))
         p2_controls = self.small_font.render("P2: Enter/S/Down to jump", True, (120, 120, 120))
@@ -441,13 +455,14 @@ class Game:
 
         self.screen.blit(two_player_info, (SCREEN_WIDTH // 2 - two_player_info.get_width() // 2, base_y))
         self.screen.blit(practice_info, (SCREEN_WIDTH // 2 - practice_info.get_width() // 2, base_y + 40))
-        self.screen.blit(start, (SCREEN_WIDTH // 2 - start.get_width() // 2, base_y + 80))
-        self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, base_y + 140))
-        self.screen.blit(p2_controls, (SCREEN_WIDTH // 2 - p2_controls.get_width() // 2, base_y + 180))
-        self.screen.blit(save_info, (SCREEN_WIDTH // 2 - save_info.get_width() // 2, base_y + 230))
+        self.screen.blit(theme_info, (SCREEN_WIDTH // 2 - theme_info.get_width() // 2, base_y + 80))
+        self.screen.blit(start, (SCREEN_WIDTH // 2 - start.get_width() // 2, base_y + 120))
+        self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, base_y + 180))
+        self.screen.blit(p2_controls, (SCREEN_WIDTH // 2 - p2_controls.get_width() // 2, base_y + 220))
+        self.screen.blit(save_info, (SCREEN_WIDTH // 2 - save_info.get_width() // 2, base_y + 270))
 
         preview_x = SCREEN_WIDTH // 2 - 32
-        preview_y = base_y + 280
+        preview_y = base_y + 320
         preview_surface = pygame.Surface((64, 64), pygame.SRCALPHA)
         from player.player import draw_rabbit
         draw_rabbit(
