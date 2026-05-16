@@ -26,6 +26,7 @@ class WeatherSystem:
         self.timer = 0
         self.duration = random.randint(1200, 2400)
         self.particles = []
+        self.previous_particles = []
         self.fog_particles = []
         self.cloud_particles = []
         self.transition_alpha = 255
@@ -122,6 +123,7 @@ class WeatherSystem:
     def switch_weather(self):
         """随机切换天气"""
         self.previous_weather = self.current_weather
+        self.previous_particles = self.particles.copy()
         self.current_weather = random.choice([
             WeatherType.SUNNY,
             WeatherType.CLOUDY,
@@ -181,13 +183,15 @@ class WeatherSystem:
         """绘制天气效果"""
         if self.is_transitioning:
             if self.previous_weather:
-                self._draw_weather_effect(screen, self.previous_weather, 255 - self.transition_alpha)
-            self._draw_weather_effect(screen, self.current_weather, self.transition_alpha)
+                self._draw_weather_effect(screen, self.previous_weather, 255 - self.transition_alpha, self.previous_particles)
+            self._draw_weather_effect(screen, self.current_weather, self.transition_alpha, self.particles)
         else:
-            self._draw_weather_effect(screen, self.current_weather, 255)
+            self._draw_weather_effect(screen, self.current_weather, 255, self.particles)
 
-    def _draw_weather_effect(self, screen, weather, alpha):
+    def _draw_weather_effect(self, screen, weather, alpha, particles=None):
         """绘制特定天气效果"""
+        if particles is None:
+            particles = self.particles
         if weather == WeatherType.SUNNY:
             self._draw_sunny(screen, alpha)
         elif weather == WeatherType.CLOUDY:
@@ -197,11 +201,11 @@ class WeatherSystem:
         elif weather == WeatherType.FOGGY:
             self._draw_foggy(screen, alpha)
         elif weather == WeatherType.RAINY:
-            self._draw_rainy(screen, alpha)
+            self._draw_rainy(screen, alpha, particles)
         elif weather == WeatherType.SNOWY:
-            self._draw_snowy(screen, alpha)
+            self._draw_snowy(screen, alpha, particles)
         elif weather == WeatherType.PETAL:
-            self._draw_petal(screen, alpha)
+            self._draw_petal(screen, alpha, particles)
 
     def _draw_sunny(self, screen, alpha=255):
         """晴天 - 明亮阳光"""
@@ -238,29 +242,35 @@ class WeatherSystem:
             pygame.draw.circle(fog_surface, (220, 220, 220, fog_alpha), (fog["size"] // 2, fog["size"] // 2), fog["size"] // 2)
             screen.blit(fog_surface, (fog["x"] - fog["size"] // 2, fog["y"] - fog["size"] // 2))
 
-    def _draw_rainy(self, screen, alpha=255):
+    def _draw_rainy(self, screen, alpha=255, particles=None):
         """雨天"""
+        if particles is None:
+            particles = self.particles
         overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         overlay.fill((0, 0, 0))
         overlay.set_alpha(int(50 * alpha / 255))
         screen.blit(overlay, (0, 0))
 
-        for p in self.particles:
+        for p in particles:
             pygame.draw.line(screen, (150, 180, 220), (p["x"], p["y"]), (p["x"] - 2, p["y"] + p["length"]), 2)
 
-    def _draw_snowy(self, screen, alpha=255):
+    def _draw_snowy(self, screen, alpha=255, particles=None):
         """下雪"""
+        if particles is None:
+            particles = self.particles
         overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         overlay.fill((0, 0, 0))
         overlay.set_alpha(int(40 * alpha / 255))
         screen.blit(overlay, (0, 0))
 
-        for p in self.particles:
+        for p in particles:
             pygame.draw.circle(screen, (255, 255, 255), (int(p["x"]), int(p["y"])), p["size"])
 
-    def _draw_petal(self, screen, alpha=255):
+    def _draw_petal(self, screen, alpha=255, particles=None):
         """飘花瓣"""
-        for p in self.particles:
+        if particles is None:
+            particles = self.particles
+        for p in particles:
             petal_surface = pygame.Surface((p["size"] * 2, p["size"] * 2), pygame.SRCALPHA)
             pygame.draw.ellipse(petal_surface, p["color"], (0, 0, p["size"] * 2, p["size"]))
             rotated = pygame.transform.rotate(petal_surface, p["rotation"])

@@ -1,6 +1,8 @@
 """兔子角色、物理和动画"""
 
 import pygame
+import math
+
 from settings import (
     PLAYER_WIDTH,
     PLAYER_HEIGHT,
