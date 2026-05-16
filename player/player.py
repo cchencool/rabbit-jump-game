@@ -11,7 +11,7 @@ from settings import (
 )
 
 
-def draw_rabbit(surface, x, y, width, height, color, frame, is_jumping, is_running, practice_mode=False):
+def draw_rabbit(surface, x, y, width, height, color, frame, is_jumping, is_running, practice_mode=False, held_item="heart"):
     """绘制栩栩如生的像素风兔子"""
     pixel_size = 4
     body_color = color
@@ -119,13 +119,24 @@ def draw_rabbit(surface, x, y, width, height, color, frame, is_jumping, is_runni
         hand_y = cy + 10 + bounce_offset
         for side in [-1, 1]:
             hx = cx + side * 16
-            pygame.draw.circle(surface, (255, 80, 80), (hx - 3, hand_y - 2), 4)
-            pygame.draw.circle(surface, (255, 80, 80), (hx + 3, hand_y - 2), 4)
-            pygame.draw.polygon(surface, (255, 80, 80), [
-                (hx - 6, hand_y),
-                (hx, hand_y + 7),
-                (hx + 6, hand_y),
-            ])
+            if held_item == "heart":
+                pygame.draw.circle(surface, (255, 80, 80), (hx - 3, hand_y - 2), 4)
+                pygame.draw.circle(surface, (255, 80, 80), (hx + 3, hand_y - 2), 4)
+                pygame.draw.polygon(surface, (255, 80, 80), [
+                    (hx - 6, hand_y),
+                    (hx, hand_y + 7),
+                    (hx + 6, hand_y),
+                ])
+            elif held_item == "flower":
+                for angle in range(0, 360, 60):
+                    px = hx + int(5 * math.cos(math.radians(angle)))
+                    py = hand_y + int(5 * math.sin(math.radians(angle)))
+                    pygame.draw.circle(surface, (255, 150, 200), (px, py), 3)
+                pygame.draw.circle(surface, (255, 255, 100), (hx, hand_y), 2)
+            elif held_item == "apple":
+                pygame.draw.circle(surface, (100, 150, 255), (hx, hand_y), 5)
+                pygame.draw.line(surface, (100, 80, 50), (hx, hand_y - 5), (hx + 2, hand_y - 8), 2)
+                pygame.draw.ellipse(surface, (100, 200, 100), (hx + 1, hand_y - 9, 4, 3))
 
 
 class Player(pygame.sprite.Sprite):
@@ -150,9 +161,6 @@ class Player(pygame.sprite.Sprite):
         self.jump_count = 0
         self.max_jumps = 2
 
-        self.frame = 0
-        self.animation_timer = 0
-
         self.hp = 3
         self.max_hp = 3
         self.invincible_timer = 0
@@ -161,10 +169,13 @@ class Player(pygame.sprite.Sprite):
         self.shield_timer = 0
         self.shield_duration = 600
 
-        self.practice_mode = False
+        self.frame = 0
+        self.animation_timer = 0
+        self.is_running = False
 
+        self.practice_mode = False
+        self.held_item = "heart"
         self._cached_surfaces = {}
-        self._last_color = None
         self._last_practice = None
 
     def take_damage(self):
@@ -229,7 +240,7 @@ class Player(pygame.sprite.Sprite):
         if self.invincible_timer > 0 and (self.invincible_timer // 4) % 2 == 0:
             return
 
-        cache_key = (self.color, self.frame, self.is_jumping, self.is_running, self.practice_mode)
+        cache_key = (self.color, self.frame, self.is_jumping, self.is_running, self.practice_mode, self.held_item)
         if cache_key not in self._cached_surfaces:
             surface = pygame.Surface((PLAYER_WIDTH, PLAYER_HEIGHT), pygame.SRCALPHA)
             draw_rabbit(
@@ -242,6 +253,7 @@ class Player(pygame.sprite.Sprite):
                 self.is_jumping,
                 self.is_running,
                 self.practice_mode,
+                self.held_item,
             )
             self._cached_surfaces[cache_key] = surface
 

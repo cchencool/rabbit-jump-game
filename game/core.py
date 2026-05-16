@@ -145,6 +145,16 @@ class Game:
                 elif self.state == GameState.PLAYING and event.key == pygame.K_MINUS:
                     self.speed_level = max(1, self.speed_level - 1)
 
+                if self.state == GameState.PLAYING and event.key == pygame.K_h and self.practice_mode:
+                    if self.player:
+                        items = ["heart", "flower", "apple"]
+                        current_idx = items.index(self.player.held_item) if self.player.held_item in items else 0
+                        self.player.held_item = items[(current_idx + 1) % len(items)]
+                    if self.player_two:
+                        items = ["heart", "flower", "apple"]
+                        current_idx = items.index(self.player_two.held_item) if self.player_two.held_item in items else 0
+                        self.player_two.held_item = items[(current_idx + 1) % len(items)]
+
     def save_game(self):
         """保存游戏进度"""
         save_data = {
@@ -477,6 +487,9 @@ class Game:
 
         two_player_info = self.small_font.render(f"2P Mode: {'ON' if self.two_player_mode else 'OFF'} (Press T to toggle)", True, (100, 100, 100))
         practice_info = self.small_font.render(f"Practice: {'ON' if self.practice_mode else 'OFF'} (Press P to toggle)", True, (100, 100, 100))
+        held_items = {"heart": "Heart", "flower": "Flower", "apple": "Apple"}
+        held_item_name = held_items.get(self.costume_manager.current if not self.practice_mode else "heart", "Heart")
+        practice_item_info = self.small_font.render(f"Held Item: {held_item_name} (Press H in game to change)", True, (100, 100, 100))
         theme_name = self.theme_names[self.background_themes[self.current_theme_index]]
         theme_info = self.small_font.render(f"Theme: {theme_name} (Press B to change)", True, (100, 100, 100))
 
@@ -497,14 +510,15 @@ class Game:
 
         self.screen.blit(two_player_info, (SCREEN_WIDTH // 2 - two_player_info.get_width() // 2, base_y))
         self.screen.blit(practice_info, (SCREEN_WIDTH // 2 - practice_info.get_width() // 2, base_y + 40))
-        self.screen.blit(theme_info, (SCREEN_WIDTH // 2 - theme_info.get_width() // 2, base_y + 80))
-        self.screen.blit(start, (SCREEN_WIDTH // 2 - start.get_width() // 2, base_y + 120))
-        self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, base_y + 180))
-        self.screen.blit(p2_controls, (SCREEN_WIDTH // 2 - p2_controls.get_width() // 2, base_y + 220))
-        self.screen.blit(save_info, (SCREEN_WIDTH // 2 - save_info.get_width() // 2, base_y + 270))
+        self.screen.blit(practice_item_info, (SCREEN_WIDTH // 2 - practice_item_info.get_width() // 2, base_y + 80))
+        self.screen.blit(theme_info, (SCREEN_WIDTH // 2 - theme_info.get_width() // 2, base_y + 120))
+        self.screen.blit(start, (SCREEN_WIDTH // 2 - start.get_width() // 2, base_y + 160))
+        self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, base_y + 220))
+        self.screen.blit(p2_controls, (SCREEN_WIDTH // 2 - p2_controls.get_width() // 2, base_y + 260))
+        self.screen.blit(save_info, (SCREEN_WIDTH // 2 - save_info.get_width() // 2, base_y + 310))
 
         preview_x = SCREEN_WIDTH // 2 - 32
-        preview_y = base_y + 320
+        preview_y = base_y + 360
         preview_surface = pygame.Surface((64, 64), pygame.SRCALPHA)
         from player.player import draw_rabbit
         draw_rabbit(
@@ -514,6 +528,7 @@ class Game:
             self.costume_manager.get_color(),
             0, False, False,
             self.practice_mode,
+            "heart",
         )
         self.screen.blit(preview_surface, (preview_x, preview_y))
 
@@ -527,6 +542,7 @@ class Game:
                 self.costume_manager_p2.get_color(),
                 0, False, False,
                 self.practice_mode,
+                "heart",
             )
             self.screen.blit(p2_preview_surface, (p2_preview_x, preview_y))
 
