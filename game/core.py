@@ -70,6 +70,9 @@ class Game:
         }
         self.current_theme_index = 0
 
+        self.save_message = ""
+        self.save_message_timer = 0
+
         self.fps_history = []
         self.max_fps_history = 120
 
@@ -148,16 +151,31 @@ class Game:
             "score": self.difficulty.score,
             "level": self.difficulty.level,
             "two_player_mode": self.two_player_mode,
+            "practice_mode": self.practice_mode,
             "costume": self.costume_manager.current,
+            "costume_p2": self.costume_manager_p2.current,
             "obstacle_speed": self.obstacle_manager.base_speed,
             "spawn_interval": self.obstacle_manager.spawn_interval,
+            "speed_level": self.speed_level,
+            "theme_index": self.current_theme_index,
             "player_hp": self.player.hp if self.player else 3,
+            "player_x": self.player.rect.x if self.player else 150,
+            "player_y": self.player.rect.y if self.player else GROUND_Y - 64,
+            "player_shield": self.player.shield_timer if self.player else 0,
+            "player_two_hp": self.player_two.hp if self.player_two else 3,
+            "player_two_x": self.player_two.rect.x if self.player_two else 280,
+            "player_two_y": self.player_two.rect.y if self.player_two else GROUND_Y - 64,
+            "player_two_shield": self.player_two.shield_timer if self.player_two else 0,
         }
         try:
             with open(SAVE_FILE, "w") as f:
                 json.dump(save_data, f)
+            self.save_message = "Game Saved!"
+            self.save_message_timer = 120
             print("Game saved!")
         except Exception as e:
+            self.save_message = "Save Failed!"
+            self.save_message_timer = 120
             print(f"Failed to save: {e}")
 
     def load_game(self):
@@ -170,25 +188,34 @@ class Game:
                 save_data = json.load(f)
 
             self.two_player_mode = save_data.get("two_player_mode", False)
+            self.practice_mode = save_data.get("practice_mode", False)
             self.costume_manager.set_costume(save_data.get("costume", "pink"))
+            self.costume_manager_p2.set_costume(save_data.get("costume_p2", "blue"))
+            self.speed_level = save_data.get("speed_level", 1)
+            self.current_theme_index = save_data.get("theme_index", 0)
 
             color = self.costume_manager.get_color()
-            self.player = Player(x=150, color=color)
+            self.player = Player(x=save_data.get("player_x", 150), color=color)
+            self.player.hp = save_data.get("player_hp", 3)
+            self.player.shield_timer = save_data.get("player_shield", 0)
+            self.player.practice_mode = self.practice_mode
             self.controller = KeyboardController(jump_keys=P1_JUMP_KEYS)
 
             if self.two_player_mode:
-                self.player_two = Player(x=280, color=(100, 100, 255))
+                p2_color = self.costume_manager_p2.get_color()
+                self.player_two = Player(x=save_data.get("player_two_x", 280), color=p2_color)
+                self.player_two.hp = save_data.get("player_two_hp", 3)
+                self.player_two.shield_timer = save_data.get("player_two_shield", 0)
+                self.player_two.practice_mode = self.practice_mode
                 self.controller_two = KeyboardController(jump_keys=P2_JUMP_KEYS)
             else:
                 self.controller_two = None
 
             self.difficulty.score = save_data.get("score", 0)
             self.difficulty.level = save_data.get("level", 1)
-            self.obstacle_manager.speed = save_data.get("obstacle_speed", 3)
+            self.obstacle_manager.base_speed = save_data.get("obstacle_speed", 4)
             self.obstacle_manager.spawn_interval = save_data.get("spawn_interval", 150)
-            if self.player:
-                self.player.hp = save_data.get("player_hp", 3)
-            self.background = Background("grass")
+            self.background = Background(self.background_themes[self.current_theme_index])
             self.state = GameState.PLAYING
             print("Game loaded!")
         except Exception as e:
@@ -230,6 +257,8 @@ class Game:
         self.difficulty.reset()
         self.weather_system = WeatherSystem()
         self.time_accumulator = 0.0
+        self.save_message = ""
+        self.save_message_timer = 0
 
     def update(self):
         """更新游戏逻辑"""
@@ -374,6 +403,10 @@ class Game:
         if self.debug_mode:
             self.draw_debug()
 
+        if self.save_message_timer > 0:
+            self.draw_save_message()
+            self.save_message_timer -= 1
+
         pygame.display.flip()
 
     def update_fps(self, fps):
@@ -424,6 +457,15 @@ class Game:
 
             max_text = small_font.render(f"Max: {max_fps:.1f}", True, (100, 255, 100))
             self.screen.blit(max_text, (graph_x + 5, graph_y + 45))
+
+    def draw_save_message(self):
+        """绘制保存提示信息"""
+        if self.save_message_timer > 0:
+            alpha = min(255, self.save_message_timer * 4)
+            message_font = pygame.font.Font(None, 36)
+            message = message_font.render(self.save_message, True, (100, 255, 100))
+            message.set_alpha(alpha)
+            self.screen.blit(message, (SCREEN_WIDTH // 2 - message.get_width() // 2, SCREEN_HEIGHT // 2 + 100))
 
     def draw_menu(self):
         """绘制菜单"""
@@ -559,10 +601,12 @@ class Game:
 
         paused = self.font.render("PAUSED", True, (255, 255, 255))
         hint = self.small_font.render("Press ESC to resume", True, (200, 200, 200))
+        save_hint = self.small_font.render("Press F to save", True, (150, 255, 150))
         quit_hint = self.small_font.render("Press Q to quit to menu", True, (180, 180, 180))
-        self.screen.blit(paused, (SCREEN_WIDTH // 2 - paused.get_width() // 2, SCREEN_HEIGHT // 2 - 60))
-        self.screen.blit(hint, (SCREEN_WIDTH // 2 - hint.get_width() // 2, SCREEN_HEIGHT // 2))
-        self.screen.blit(quit_hint, (SCREEN_WIDTH // 2 - quit_hint.get_width() // 2, SCREEN_HEIGHT // 2 + 40))
+        self.screen.blit(paused, (SCREEN_WIDTH // 2 - paused.get_width() // 2, SCREEN_HEIGHT // 2 - 80))
+        self.screen.blit(hint, (SCREEN_WIDTH // 2 - hint.get_width() // 2, SCREEN_HEIGHT // 2 - 20))
+        self.screen.blit(save_hint, (SCREEN_WIDTH // 2 - save_hint.get_width() // 2, SCREEN_HEIGHT // 2 + 20))
+        self.screen.blit(quit_hint, (SCREEN_WIDTH // 2 - quit_hint.get_width() // 2, SCREEN_HEIGHT // 2 + 60))
 
     def draw_confirm_quit(self):
         """绘制确认退出画面"""
