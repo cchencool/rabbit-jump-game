@@ -216,7 +216,7 @@ class Game:
 
         self.obstacle_manager.reset()
         self.difficulty.reset()
-        self.background = Background("grass")
+        self.background = Background(self.background_themes[self.current_theme_index])
         self.state = GameState.PLAYING
 
     def reset_game(self):
