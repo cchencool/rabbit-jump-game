@@ -149,7 +149,7 @@ class Game:
             "level": self.difficulty.level,
             "two_player_mode": self.two_player_mode,
             "costume": self.costume_manager.current,
-            "obstacle_speed": self.obstacle_manager.speed,
+            "obstacle_speed": self.obstacle_manager.base_speed,
             "spawn_interval": self.obstacle_manager.spawn_interval,
             "player_hp": self.player.hp if self.player else 3,
         }
@@ -352,7 +352,7 @@ class Game:
 
     def draw(self):
         """绘制游戏画面"""
-        if self.state in (GameState.PLAYING, GameState.PAUSED, GameState.CONFIRM_QUIT, GameState.GAME_OVER):
+        if self.state in (GameState.PLAYING, GameState.PAUSED, GameState.CONFIRM_QUIT, GameState.GAME_OVER, GameState.MENU):
             self.background.draw(self.screen)
         else:
             self.screen.fill(WHITE)
